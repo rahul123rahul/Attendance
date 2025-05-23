@@ -1,0 +1,829 @@
+<!<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>B.Tech Attendance Tracking System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* --- Professional Styles --- */
+    :root {
+      --primary: #0056b3;
+      --secondary: #f5f7fa;
+      --accent: #007bff;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --warn: #f39c12;
+      --border: #e0e6ed;
+      --radius: 10px;
+    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--secondary); margin: 0; }
+    .container {
+      max-width: 440px; margin: 48px auto 120px auto; background: #fff;
+      border-radius: var(--radius); box-shadow: 0 2px 16px #0002; padding: 28px 20px 24px 20px;
+    }
+    h2, h3 { color: var(--primary); text-align: center; margin-top: 0; }
+    label { display: block; margin: 12px 0 4px; color: #555; }
+    input, select, textarea {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
+      margin-bottom: 16px; font-size: 1em; background: #fafbfc;
+    }
+    input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+    button {
+      padding: 10px 20px; border: none; border-radius: 6px; background: var(--accent); color: #fff;
+      font-weight: 600; font-size: 1em; cursor: pointer; margin-right: 8px; transition: background .2s;
+    }
+    button:disabled { background: #ccc; }
+    .danger { background: var(--danger) !important; }
+    .success { background: var(--success) !important; }
+    .warn { background: var(--warn) !important; color: #fff !important; }
+    .info { background: var(--primary) !important; }
+    .row { display: flex; gap: 10px; }
+    .row input { margin-bottom: 0; }
+    .edit-btn, .save-btn, .cancel-btn { font-size: 0.9em; padding: 4px 10px; margin: 0 2px;}
+    .edit-btn { background: var(--accent); }
+    .save-btn { background: var(--success); }
+    .cancel-btn { background: #888; }
+    .subject-list, .enquiry-list, .ads-list, .subadmin-list {
+      width: 100%; border-collapse: collapse; margin-bottom: 18px;
+    }
+    .subject-list th, .subject-list td, .enquiry-list th, .enquiry-list td,
+    .ads-list th, .ads-list td, .subadmin-list th, .subadmin-list td {
+      border: 1px solid var(--border); padding: 8px; text-align: center;
+    }
+    .subject-list th, .enquiry-list th, .ads-list th, .subadmin-list th {
+      background: var(--secondary); font-weight: 600;
+    }
+    .ads-bar {
+      position: fixed; bottom: 0; left: 0; width: 100%; background: #fff;
+      border-top: 1.5px solid var(--border); z-index: 200;
+      box-shadow: 0 -2px 12px #0001; padding: 12px 0 10px 0;
+    }
+    .ads-bar-inner {
+      display: flex; justify-content: center; align-items: flex-end; gap: 30px; flex-wrap: wrap;
+    }
+    .ad-item {
+      display: flex; flex-direction: column; align-items: center; margin: 0 8px;
+      width: 120px; height: 150px; background: #f8fafc; border-radius: 10px; box-shadow: 0 2px 8px #0001;
+      justify-content: center; position: relative;
+    }
+    .ad-media {
+      width: 96px; height: 120px; object-fit: cover; border-radius: 8px;
+      aspect-ratio: 4/5; background: #e0e6ed;
+    }
+    .ad-delete-btn {
+      margin-top: 4px; background: var(--danger); color: #fff; border: none; border-radius: 4px;
+      font-size: 0.84em; padding: 2px 7px; cursor: pointer; position: absolute; top: 4px; right: 4px;
+    }
+    .logout-btn {
+      float: right; background: var(--danger); margin: 0; padding: 7px 16px; font-size: 1em;
+    }
+    .icon-btn { background: none; border: none; cursor: pointer; }
+    .icon-img { width: 28px; vertical-align: middle; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .note { color: #999; font-size: 0.95em; margin-bottom: 8px; }
+    .detained { color: var(--danger); font-weight: bold; }
+    .safe { color: var(--success); font-weight: bold; }
+    .bunk { color: var(--primary); font-weight: 600; }
+    .forgot-link {
+      color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.98em;
+      margin-left: 6px;
+    }
+    .subject-bunk { font-size: 0.9em; color: var(--primary); font-weight: 500; }
+    .ads-upload-label { font-size: 0.98em; color: #555; }
+    .ads-upload-area { margin-bottom: 10px; }
+    @media (max-width: 600px) {
+      .container { max-width: 99vw; padding: 8px; }
+      .ads-bar-inner { flex-direction: column; gap: 12px; }
+      .ad-item { width: 95vw; max-width: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Mandatory Page -->
+  <div id="mandatoryPage" class="container" style="display:block;">
+    <h2>B.Tech Attendance Tracker</h2>
+    <p>
+      <b>Welcome!</b> Track your subjects, attendance, and stay compliant with college rules.<br>
+      <b>Minimum Attendance:</b> <span class="safe">75%</span> to avoid detention.<br><br>
+      <ul>
+        <li>Sign up with mobile & 4-digit PIN</li>
+        <li>Track/edit attendance per subject</li>
+        <li>See how many classes you can bunk per subject</li>
+        <li>Admin/Sub-admin can manage ads and enquiries</li>
+      </ul>
+    </p>
+    <button onclick="showAuthPage()">Continue</button>
+  </div>
+
+  <!-- Authentication Page -->
+  <div id="authPage" class="container" style="display:none;">
+    <h2>
+      <img src="https://img.icons8.com/ios-filled/50/0056b3/login-rounded-right.png" class="icon-img" alt="Login">
+      Attendance System
+    </h2>
+    <div style="margin-bottom:18px;">
+      <button onclick="showLogin()">Login</button>
+      <button onclick="showSignup()">Sign Up</button>
+      <button onclick="showAdminLogin()">Admin Login</button>
+    </div>
+    <form id="signupForm" style="display:none;" onsubmit="signup(event)">
+      <label>Mobile Number</label>
+      <input type="tel" id="signupMobile" pattern="[0-9]{10}" maxlength="10" required>
+      <label>4-Digit PIN</label>
+      <input type="password" id="signupPin" pattern="[0-9]{4}" maxlength="4" required>
+      <button type="submit">Sign Up</button>
+    </form>
+    <form id="loginForm" style="display:none;" onsubmit="login(event)">
+      <label>Mobile Number</label>
+      <input type="tel" id="loginMobile" pattern="[0-9]{10}" maxlength="10" required>
+      <label>4-Digit PIN</label>
+      <input type="password" id="loginPin" pattern="[0-9]{4}" maxlength="4" required>
+      <div style="text-align:right;">
+        <span class="forgot-link" onclick="showForgotPin()">Forgot PIN?</span>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <form id="adminLoginForm" style="display:none;" onsubmit="adminLogin(event)">
+      <label>Mobile Number</label>
+      <input type="tel" id="adminMobile" pattern="[0-9]{10}" maxlength="10" required>
+      <label>4-Digit PIN</label>
+      <input type="password" id="adminPin" pattern="[0-9]{4}" maxlength="4" required>
+      <button type="submit">Admin Login</button>
+    </form>
+    <!-- Forgot PIN Form -->
+    <form id="forgotPinForm" style="display:none;" onsubmit="resetPin(event)">
+      <label>Registered Mobile Number</label>
+      <input type="tel" id="forgotMobile" pattern="[0-9]{10}" maxlength="10" required>
+      <label>New 4-Digit PIN</label>
+      <input type="password" id="forgotPin1" pattern="[0-9]{4}" maxlength="4" required>
+      <label>Confirm New 4-Digit PIN</label>
+      <input type="password" id="forgotPin2" pattern="[0-9]{4}" maxlength="4" required>
+      <button type="submit" class="success">Reset PIN</button>
+      <button type="button" class="cancel-btn" onclick="showLogin()">Cancel</button>
+    </form>
+  </div>
+
+  <!-- Student Dashboard -->
+  <div id="studentDashboard" class="container" style="display:none;">
+    <div class="flex-between">
+      <h2>Student Dashboard</h2>
+      <button class="logout-btn" onclick="logout()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/logout-rounded.png" class="icon-img" alt="Logout">
+        Logout
+      </button>
+    </div>
+    <div>
+      <h3>Add Subject</h3>
+      <form id="addSubjectForm" onsubmit="addSubject(event)">
+        <div class="row">
+          <input type="text" id="subjectName" placeholder="Subject Name" required>
+          <input type="number" id="totalClasses" min="1" placeholder="Total Classes" required>
+          <input type="number" id="attendedClasses" min="0" placeholder="Attended Classes" required>
+          <button type="submit" class="info">Add</button>
+        </div>
+      </form>
+      <h3>Your Subjects</h3>
+      <table class="subject-list" id="subjectTable">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Total</th>
+            <th>Attended</th>
+            <th>%</th>
+            <th>Bunk</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="subjectList"></tbody>
+      </table>
+      <div id="overallAttendance"></div>
+      <div id="bunkInfo"></div>
+      <h3>Consolidated Attendance Report</h3>
+      <div id="consolidatedReport"></div>
+      <h3>Enquiry Form</h3>
+      <form id="enquiryForm" onsubmit="submitEnquiry(event)">
+        <input type="text" id="enqName" placeholder="Your Name" required>
+        <input type="text" id="enqCollege" placeholder="College Name" required>
+        <input type="email" id="enqEmail" placeholder="Email ID" required>
+        <textarea id="enqDesc" placeholder="Suggestion or Description" required></textarea>
+        <button type="submit" class="success">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminDashboard" class="container" style="display:none;">
+    <div class="flex-between">
+      <h2>Admin Panel</h2>
+      <button class="logout-btn" onclick="logout()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/logout-rounded.png" class="icon-img" alt="Logout">
+        Logout
+      </button>
+    </div>
+    <h3>Add Sub Admin</h3>
+    <form id="addSubAdminForm" onsubmit="addSubAdmin(event)">
+      <div class="row">
+        <input type="tel" id="subAdminMobile" pattern="[0-9]{10}" maxlength="10" placeholder="Mobile Number" required>
+        <input type="password" id="subAdminPin" pattern="[0-9]{4}" maxlength="4" placeholder="4-Digit PIN" required>
+        <button type="submit" class="info">Add</button>
+      </div>
+    </form>
+    <h3>Sub Admins</h3>
+    <table class="subadmin-list" id="subAdminTable">
+      <thead>
+        <tr>
+          <th>Mobile</th>
+        </tr>
+      </thead>
+      <tbody id="subAdminList"></tbody>
+    </table>
+    <h3>Enquiries</h3>
+    <table class="enquiry-list" id="adminEnquiryTable">
+      <thead>
+        <tr>
+          <th>Name</th><th>College</th><th>Email</th><th>Description</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="adminEnquiryList"></tbody>
+    </table>
+    <h3>Upload Advertisement</h3>
+    <form id="adForm" class="ads-upload-area" onsubmit="uploadAd(event)">
+      <label class="ads-upload-label">Image or Video (4:5 aspect ratio recommended)</label>
+      <input type="file" id="adFile" accept="image/*,video/*" required>
+      <button type="submit" class="success">Upload</button>
+    </form>
+    <h3>All Ads</h3>
+    <div id="adminAdsList"></div>
+  </div>
+
+  <!-- Sub Admin Dashboard -->
+  <div id="subAdminDashboard" class="container" style="display:none;">
+    <div class="flex-between">
+      <h2>Sub Admin Panel</h2>
+      <button class="logout-btn" onclick="logout()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/logout-rounded.png" class="icon-img" alt="Logout">
+        Logout
+      </button>
+    </div>
+    <h3>Enquiries</h3>
+    <table class="enquiry-list" id="subAdminEnquiryTable">
+      <thead>
+        <tr>
+          <th>Name</th><th>College</th><th>Email</th><th>Description</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="subAdminEnquiryList"></tbody>
+    </table>
+    <h3>Upload Advertisement</h3>
+    <form id="subAdForm" class="ads-upload-area" onsubmit="uploadAd(event)">
+      <label class="ads-upload-label">Image or Video (4:5 aspect ratio recommended)</label>
+      <input type="file" id="subAdFile" accept="image/*,video/*" required>
+      <button type="submit" class="success">Upload</button>
+    </form>
+    <h3>Your Ads</h3>
+    <div id="subAdminAdsList"></div>
+  </div>
+
+  <!-- Fixed Ads Bar (for all dashboards) -->
+  <div class="ads-bar" id="adsBar" style="display:none;">
+    <div class="ads-bar-inner" id="adsBarInner"></div>
+  </div>
+
+  <script>
+    // --- Data Storage Helpers ---
+    function getData(key, fallback) { return JSON.parse(localStorage.getItem(key)) || fallback; }
+    function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+    // --- Mandatory Page ---
+    function showAuthPage() {
+      document.getElementById('mandatoryPage').style.display = 'none';
+      document.getElementById('authPage').style.display = 'block';
+    }
+
+    // --- Authentication Logic ---
+    function showLogin() {
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('forgotPinForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'block';
+    }
+    function showSignup() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('forgotPinForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'block';
+    }
+    function showAdminLogin() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('forgotPinForm').style.display = 'none';
+      document.getElementById('adminLoginForm').style.display = 'block';
+    }
+    function showForgotPin() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('forgotPinForm').style.display = 'block';
+    }
+
+    // --- Signup ---
+    function signup(e) {
+      e.preventDefault();
+      const mobile = document.getElementById('signupMobile').value.trim();
+      const pin = document.getElementById('signupPin').value.trim();
+      if (mobile === '9603230138') { alert("This number is reserved for Admin."); return; }
+      let users = getData('users', []);
+      if (users.find(u => u.mobile === mobile)) {
+        alert("Mobile already registered!");
+        return;
+      }
+      users.push({ mobile, pin, role: 'student', subjects: [] });
+      setData('users', users);
+      alert("Signup successful! Please login.");
+      showLogin();
+    }
+
+    // --- Login ---
+    function login(e) {
+      e.preventDefault();
+      const mobile = document.getElementById('loginMobile').value.trim();
+      const pin = document.getElementById('loginPin').value.trim();
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile && u.pin === pin && u.role === 'student');
+      if (!user) { alert("Invalid credentials!"); return; }
+      localStorage.setItem('loggedInUser', mobile);
+      localStorage.setItem('userRole', 'student');
+      showStudentDashboard();
+    }
+
+    // --- Forgot PIN (Student only) ---
+    function resetPin(e) {
+      e.preventDefault();
+      const mobile = document.getElementById('forgotMobile').value.trim();
+      const pin1 = document.getElementById('forgotPin1').value.trim();
+      const pin2 = document.getElementById('forgotPin2').value.trim();
+      if (pin1 !== pin2) { alert("PINs do not match."); return; }
+      if (mobile === '9603230138') { alert("Cannot reset admin PIN."); return; }
+      let subAdmins = getData('subAdmins', []);
+      if (subAdmins.find(s => s.mobile === mobile)) {
+        alert("Cannot reset sub-admin PIN here.");
+        return;
+      }
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile && u.role === 'student');
+      if (!user) { alert("Mobile not registered as student."); return; }
+      user.pin = pin1;
+      setData('users', users);
+      alert("PIN reset successfully! Please login.");
+      showLogin();
+    }
+
+    // --- Admin & Sub Admin Login ---
+    function adminLogin(e) {
+      e.preventDefault();
+      const mobile = document.getElementById('adminMobile').value.trim();
+      const pin = document.getElementById('adminPin').value.trim();
+      if (mobile === '9603230138' && pin === '0210') {
+        localStorage.setItem('loggedInUser', mobile);
+        localStorage.setItem('userRole', 'admin');
+        showAdminDashboard();
+        return;
+      }
+      let subAdmins = getData('subAdmins', []);
+      let sub = subAdmins.find(s => s.mobile === mobile && s.pin === pin);
+      if (sub) {
+        localStorage.setItem('loggedInUser', mobile);
+        localStorage.setItem('userRole', 'subadmin');
+        showSubAdminDashboard();
+        return;
+      }
+      alert("Invalid admin/sub-admin credentials!");
+    }
+
+    // --- Logout ---
+    function logout() {
+      localStorage.removeItem('loggedInUser');
+      localStorage.removeItem('userRole');
+      location.reload();
+    }
+
+    // --- Student Dashboard ---
+    function showStudentDashboard() {
+      document.getElementById('authPage').style.display = 'none';
+      document.getElementById('studentDashboard').style.display = 'block';
+      document.getElementById('adminDashboard').style.display = 'none';
+      document.getElementById('subAdminDashboard').style.display = 'none';
+      document.getElementById('adsBar').style.display = 'block';
+      renderSubjects();
+      renderOverallAttendance();
+      renderConsolidatedReport();
+      renderAdsBar();
+    }
+
+    // --- Admin Dashboard ---
+    function showAdminDashboard() {
+      document.getElementById('authPage').style.display = 'none';
+      document.getElementById('studentDashboard').style.display = 'none';
+      document.getElementById('adminDashboard').style.display = 'block';
+      document.getElementById('subAdminDashboard').style.display = 'none';
+      document.getElementById('adsBar').style.display = 'block';
+      renderSubAdmins();
+      renderAdminEnquiries();
+      renderAdminAds();
+      renderAdsBar();
+    }
+
+    // --- Sub Admin Dashboard ---
+    function showSubAdminDashboard() {
+      document.getElementById('authPage').style.display = 'none';
+      document.getElementById('studentDashboard').style.display = 'none';
+      document.getElementById('adminDashboard').style.display = 'none';
+      document.getElementById('subAdminDashboard').style.display = 'block';
+      document.getElementById('adsBar').style.display = 'block';
+      renderSubAdminEnquiries();
+      renderSubAdminAds();
+      renderAdsBar();
+    }
+
+    // --- On Load: Auto-login if session exists ---
+    window.onload = function() {
+      let user = localStorage.getItem('loggedInUser');
+      let role = localStorage.getItem('userRole');
+      if (user && role) {
+        if (role === 'student') showStudentDashboard();
+        else if (role === 'admin') showAdminDashboard();
+        else if (role === 'subadmin') showSubAdminDashboard();
+      }
+    }
+
+    // --- Subject Management ---
+    function addSubject(e) {
+      e.preventDefault();
+      let name = document.getElementById('subjectName').value.trim();
+      let total = parseInt(document.getElementById('totalClasses').value);
+      let attended = parseInt(document.getElementById('attendedClasses').value);
+      if (attended > total) { alert("Attended cannot exceed total classes."); return; }
+      let mobile = localStorage.getItem('loggedInUser');
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile);
+      if (!user.subjects) user.subjects = [];
+      user.subjects.push({ name, total, attended });
+      setData('users', users);
+      document.getElementById('addSubjectForm').reset();
+      renderSubjects();
+      renderOverallAttendance();
+      renderConsolidatedReport();
+    }
+
+    function renderSubjects() {
+      let mobile = localStorage.getItem('loggedInUser');
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile);
+      let tbody = document.getElementById('subjectList');
+      tbody.innerHTML = '';
+      if (!user.subjects || user.subjects.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">No subjects added.</td></tr>';
+        return;
+      }
+      user.subjects.forEach((subj, idx) => {
+        let perc = subj.total > 0 ? ((subj.attended / subj.total) * 100).toFixed(1) : '0.0';
+        let bunk = '';
+        if (perc >= 75) {
+          let maxBunk = Math.floor((subj.attended / 0.75) - subj.total);
+          bunk = `<span class="subject-bunk">${maxBunk > 0 ? maxBunk : 0}</span>`;
+        } else {
+          bunk = `<span style="color:#888;">-</span>`;
+        }
+        // Editable cells
+        tbody.innerHTML += `<tr>
+          <td>${subj.name}</td>
+          <td>
+            <span id="totalDisplay${idx}">${subj.total}</span>
+            <input type="number" id="totalEdit${idx}" value="${subj.total}" min="1" style="display:none;width:50px;">
+          </td>
+          <td>
+            <span id="attendedDisplay${idx}">${subj.attended}</span>
+            <input type="number" id="attendedEdit${idx}" value="${subj.attended}" min="0" max="${subj.total}" style="display:none;width:50px;">
+          </td>
+          <td id="perc${idx}">${perc}%</td>
+          <td id="bunk${idx}">${bunk}</td>
+          <td>
+            <button class="edit-btn" id="editBtn${idx}" onclick="editSubject(${idx})">Edit</button>
+            <button class="save-btn" id="saveBtn${idx}" style="display:none;" onclick="saveSubject(${idx})">Save</button>
+            <button class="cancel-btn" id="cancelBtn${idx}" style="display:none;" onclick="cancelEdit(${idx})">Cancel</button>
+            <button class="danger" onclick="deleteSubject(${idx})">Delete</button>
+          </td>
+        </tr>`;
+      });
+    }
+
+    function editSubject(idx) {
+      document.getElementById(`totalDisplay${idx}`).style.display = 'none';
+      document.getElementById(`attendedDisplay${idx}`).style.display = 'none';
+      document.getElementById(`totalEdit${idx}`).style.display = 'inline-block';
+      document.getElementById(`attendedEdit${idx}`).style.display = 'inline-block';
+      document.getElementById(`editBtn${idx}`).style.display = 'none';
+      document.getElementById(`saveBtn${idx}`).style.display = 'inline-block';
+      document.getElementById(`cancelBtn${idx}`).style.display = 'inline-block';
+    }
+    function saveSubject(idx) {
+      let total = parseInt(document.getElementById(`totalEdit${idx}`).value);
+      let attended = parseInt(document.getElementById(`attendedEdit${idx}`).value);
+      if (attended > total) { alert("Attended cannot exceed total classes."); return; }
+      let mobile = localStorage.getItem('loggedInUser');
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile);
+      user.subjects[idx].total = total;
+      user.subjects[idx].attended = attended;
+      setData('users', users);
+      renderSubjects();
+      renderOverallAttendance();
+      renderConsolidatedReport();
+    }
+    function cancelEdit(idx) { renderSubjects(); }
+    function deleteSubject(idx) {
+      let mobile = localStorage.getItem('loggedInUser');
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile);
+      user.subjects.splice(idx, 1);
+      setData('users', users);
+      renderSubjects();
+      renderOverallAttendance();
+      renderConsolidatedReport();
+    }
+
+    function renderOverallAttendance() {
+      let mobile = localStorage.getItem('loggedInUser');
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile);
+      let total = 0, attended = 0;
+      if (user.subjects && user.subjects.length > 0) {
+        user.subjects.forEach(s => { total += s.total; attended += s.attended; });
+      }
+      let perc = total > 0 ? ((attended / total) * 100).toFixed(1) : '0.0';
+      let msg = '';
+      if (perc < 65) msg = `<span class='detained'>Your attendance is very low (${perc}%). High risk of detention!</span>`;
+      else if (perc < 75) msg = `<span class='warn'>Warning: Attendance is ${perc}%. You may be detained.</span>`;
+      else msg = `<span class='safe'>Safe! Attendance: ${perc}%</span>`;
+      document.getElementById('overallAttendance').innerHTML = `<b>Overall Attendance:</b> ${attended}/${total} (${perc}%)<br>${msg}`;
+      // Bunk calculation
+      let bunkMsg = '';
+      if (perc >= 75 && total > 0) {
+        let maxBunk = Math.floor((attended / 0.75) - total);
+        bunkMsg = `<b>You can safely bunk <span class='bunk'>${maxBunk}</span> more class(es) overall.</b>`;
+      }
+      document.getElementById('bunkInfo').innerHTML = bunkMsg;
+    }
+
+    function renderConsolidatedReport() {
+      let mobile = localStorage.getItem('loggedInUser');
+      let users = getData('users', []);
+      let user = users.find(u => u.mobile === mobile);
+      let total = 0, attended = 0;
+      if (user.subjects && user.subjects.length > 0) {
+        user.subjects.forEach(s => { total += s.total; attended += s.attended; });
+      }
+      let perc = total > 0 ? ((attended / total) * 100).toFixed(1) : '0.0';
+      document.getElementById('consolidatedReport').innerHTML =
+        `<b>Total Classes:</b> ${total}<br><b>Attended:</b> ${attended}<br><b>Attendance:</b> ${perc}%`;
+    }
+
+    // --- Enquiry Form ---
+    function submitEnquiry(e) {
+      e.preventDefault();
+      let name = document.getElementById('enqName').value.trim();
+      let college = document.getElementById('enqCollege').value.trim();
+      let email = document.getElementById('enqEmail').value.trim();
+      let desc = document.getElementById('enqDesc').value.trim();
+      let enquiries = getData('enquiries', []);
+      enquiries.push({ name, college, email, desc });
+      setData('enquiries', enquiries);
+      alert("Enquiry submitted!");
+      document.getElementById('enquiryForm').reset();
+      renderAdminEnquiries();
+      renderSubAdminEnquiries();
+    }
+
+    // --- Admin: Sub Admin Management ---
+    function addSubAdmin(e) {
+      e.preventDefault();
+      let mobile = document.getElementById('subAdminMobile').value.trim();
+      let pin = document.getElementById('subAdminPin').value.trim();
+      if (mobile === '9603230138') { alert("This number is reserved for Admin."); return; }
+      let subAdmins = getData('subAdmins', []);
+      if (subAdmins.find(s => s.mobile === mobile)) {
+        alert("Sub Admin already exists!");
+        return;
+      }
+      subAdmins.push({ mobile, pin });
+      setData('subAdmins', subAdmins);
+      alert("Sub Admin added!");
+      document.getElementById('addSubAdminForm').reset();
+      renderSubAdmins();
+    }
+
+    function renderSubAdmins() {
+      let subAdmins = getData('subAdmins', []);
+      let tbody = document.getElementById('subAdminList');
+      tbody.innerHTML = '';
+      if (subAdmins.length === 0) {
+        tbody.innerHTML = '<tr><td>No sub admins.</td></tr>';
+        return;
+      }
+      subAdmins.forEach(sa => {
+        tbody.innerHTML += `<tr><td>${sa.mobile}</td></tr>`;
+      });
+    }
+
+    // --- Admin: Enquiry Management ---
+    function renderAdminEnquiries() {
+      let enquiries = getData('enquiries', []);
+      let tbody = document.getElementById('adminEnquiryList');
+      tbody.innerHTML = '';
+      if (enquiries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No enquiries yet.</td></tr>';
+        return;
+      }
+      enquiries.forEach((enq, idx) => {
+        tbody.innerHTML += `<tr>
+          <td>${enq.name}</td>
+          <td>${enq.college}</td>
+          <td>${enq.email}</td>
+          <td>${enq.desc}</td>
+          <td><button class="danger" onclick="deleteEnquiry(${idx})">Delete</button></td>
+        </tr>`;
+      });
+    }
+
+    function deleteEnquiry(idx) {
+      let enquiries = getData('enquiries', []);
+      enquiries.splice(idx, 1);
+      setData('enquiries', enquiries);
+      renderAdminEnquiries();
+      renderSubAdminEnquiries();
+    }
+
+    // --- Sub Admin: Enquiry Management ---
+    function renderSubAdminEnquiries() {
+      let enquiries = getData('enquiries', []);
+      let tbody = document.getElementById('subAdminEnquiryList');
+      tbody.innerHTML = '';
+      if (enquiries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No enquiries yet.</td></tr>';
+        return;
+      }
+      enquiries.forEach((enq, idx) => {
+        tbody.innerHTML += `<tr>
+          <td>${enq.name}</td>
+          <td>${enq.college}</td>
+          <td>${enq.email}</td>
+          <td>${enq.desc}</td>
+          <td><button class="danger" onclick="deleteEnquiry(${idx})">Delete</button></td>
+        </tr>`;
+      });
+    }
+
+    // --- Advertisement Management ---
+    function uploadAd(e) {
+      e.preventDefault();
+      let input = e.target.querySelector('input[type="file"]');
+      let file = input.files[0];
+      if (!file) return;
+      let reader = new FileReader();
+      reader.onload = function(ev) {
+        let ads = getData('ads', []);
+        let uploader = localStorage.getItem('loggedInUser');
+        let role = localStorage.getItem('userRole');
+        let type = file.type.startsWith('image') ? 'image' : 'video';
+        ads.push({
+          data: ev.target.result,
+          type: type,
+          uploader: uploader,
+          uploaderRole: role,
+          timestamp: Date.now()
+        });
+        setData('ads', ads);
+        renderAdsBar();
+        if (role === 'admin') renderAdminAds();
+        else if (role === 'subadmin') renderSubAdminAds();
+        alert("Ad uploaded!");
+        input.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // --- Ads Bar for All Users (4:5 ratio) ---
+    function renderAdsBar() {
+      let ads = getData('ads', []);
+      let adsBarInner = document.getElementById('adsBarInner');
+      adsBarInner.innerHTML = '';
+      if (ads.length === 0) {
+        adsBarInner.innerHTML = '<span style="color:#888;">No ads yet.</span>';
+        return;
+      }
+      let user = localStorage.getItem('loggedInUser');
+      let role = localStorage.getItem('userRole');
+      ads.forEach((ad, idx) => {
+        let adHtml = '';
+        if (ad.type === 'image')
+          adHtml = `<img class="ad-media" src="${ad.data}" alt="Ad">`;
+        else
+          adHtml = `<video class="ad-media" src="${ad.data}" controls></video>`;
+        let delBtn = '';
+        if ((role === 'admin' && ad.uploader === user) || (role === 'subadmin' && ad.uploader === user)) {
+          delBtn = `<button class="ad-delete-btn" onclick="deleteAd(${idx})">Delete</button>`;
+        }
+        adsBarInner.innerHTML += `<div class="ad-item">${adHtml}${delBtn}</div>`;
+      });
+      document.getElementById('adsBar').style.display = 'block';
+    }
+
+    // --- Admin: Ads Management ---
+    function renderAdminAds() {
+      let ads = getData('ads', []);
+      let adsDiv = document.getElementById('adminAdsList');
+      adsDiv.innerHTML = '';
+      if (ads.length === 0) {
+        adsDiv.innerHTML = '<span style="color:#888;">No ads uploaded.</span>';
+        return;
+      }
+      ads.forEach((ad, idx) => {
+        let adHtml = '';
+        if (ad.type === 'image')
+          adHtml = `<img class="ad-media" src="${ad.data}" alt="Ad">`;
+        else
+          adHtml = `<video class="ad-media" src="${ad.data}" controls></video>`;
+        let delBtn = '';
+        if (ad.uploader === localStorage.getItem('loggedInUser'))
+          delBtn = `<button class="ad-delete-btn" onclick="deleteAd(${idx})">Delete</button>`;
+        adsDiv.innerHTML += `<div class="ad-item">${adHtml}<div style="font-size:0.82em;color:#888;">By: ${ad.uploader}</div>${delBtn}</div>`;
+      });
+    }
+
+    // --- Sub Admin: Ads Management ---
+    function renderSubAdminAds() {
+      let ads = getData('ads', []);
+      let adsDiv = document.getElementById('subAdminAdsList');
+      adsDiv.innerHTML = '';
+      let user = localStorage.getItem('loggedInUser');
+      let myAds = ads.filter(ad => ad.uploader === user);
+      if (myAds.length === 0) {
+        adsDiv.innerHTML = '<span style="color:#888;">No ads uploaded.</span>';
+        return;
+      }
+      myAds.forEach((ad, idx) => {
+        let adHtml = '';
+        if (ad.type === 'image')
+          adHtml = `<img class="ad-media" src="${ad.data}" alt="Ad">`;
+        else
+          adHtml = `<video class="ad-media" src="${ad.data}" controls></video>`;
+        let globalIdx = getData('ads', []).findIndex(a => a === ad);
+        adsDiv.innerHTML += `<div class="ad-item">${adHtml}<div style="font-size:0.82em;color:#888;">By: ${ad.uploader}</div>
+          <button class="ad-delete-btn" onclick="deleteAd(${globalIdx})">Delete</button></div>`;
+      });
+    }
+
+    // --- Delete Ad (only for uploader) ---
+    function deleteAd(idx) {
+      let ads = getData('ads', []);
+      let user = localStorage.getItem('loggedInUser');
+      let role = localStorage.getItem('userRole');
+      if ((ads[idx].uploader === user && (role === 'admin' || role === 'subadmin'))) {
+        ads.splice(idx, 1);
+        setData('ads', ads);
+        renderAdsBar();
+        if (role === 'admin') renderAdminAds();
+        else if (role === 'subadmin') renderSubAdminAds();
+      } else {
+        alert("You can only delete your own ads.");
+      }
+    }
+
+    // --- Utility: Render on dashboard switch ---
+    window.renderAdminEnquiries = renderAdminEnquiries;
+    window.renderSubAdminEnquiries = renderSubAdminEnquiries;
+
+    // --- Expose functions for buttons ---
+    window.showAuthPage = showAuthPage;
+    window.showLogin = showLogin;
+    window.showSignup = showSignup;
+    window.showAdminLogin = showAdminLogin;
+    window.showForgotPin = showForgotPin;
+    window.signup = signup;
+    window.login = login;
+    window.adminLogin = adminLogin;
+    window.logout = logout;
+    window.addSubject = addSubject;
+    window.editSubject = editSubject;
+    window.saveSubject = saveSubject;
+    window.cancelEdit = cancelEdit;
+    window.deleteSubject = deleteSubject;
+    window.submitEnquiry = submitEnquiry;
+    window.addSubAdmin = addSubAdmin;
+    window.deleteEnquiry = deleteEnquiry;
+    window.uploadAd = uploadAd;
+    window.deleteAd = deleteAd;
+    window.resetPin = resetPin;
+  </script>
+</body>
+</html>
