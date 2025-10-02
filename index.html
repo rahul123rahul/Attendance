@@ -498,11 +498,20 @@
         let userRole = 'student';
         let unsubscribeSubjects = null;
         let unsubscribeEnquiries = null;
-        let unsubscribeAds = null;
+// ... existing code ... -->
         let unsubscribeSubAdmins = null;
 
         // --- Config ---
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const userProvidedConfig = {
+            apiKey: "AIzaSyDjh0fSIdc39G2htzp205C1OheJ8t8dnf4",
+            authDomain: "asr-attendance-56791.firebaseapp.com",
+            projectId: "asr-attendance-56791",
+            storageBucket: "asr-attendance-56791.firebasestorage.app",
+            messagingSenderId: "349816783965",
+            appId: "1:349816783965:web:f6a1a57e3eddd966f1f9b4",
+            measurementId: "G-1WBWNRX9QB"
+        };
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(userProvidedConfig));
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         const ADMIN_MOBILE = '9603230138';
@@ -551,7 +560,7 @@
 
 
         // --- Initialization ---
-        function initializeAppAndAuth() {
+        functioninitializeAppAndAuth() {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -1337,4 +1346,5 @@
     </script>
 </body>
 </html>
+
 
