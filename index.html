@@ -560,7 +560,7 @@
 
 
         // --- Initialization ---
-        functioninitializeAppAndAuth() {
+        function initializeAppAndAuth() {
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -1235,40 +1235,38 @@
                 console.error(error);
             }
         }
-        
-        // Ads Management
-        document.getElementById('ad-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('ad-file');
-            const file = fileInput.files[0];
-            if (!file) return;
+        // Ads management
+document.getElementById('ad-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('ad-file');
+    const file = fileInput.files[0];
+    const caption = document.getElementById('ad-caption').value;
 
-            if (file.size > 1024 * 1024) { // 1MB limit
-                showToast('File is too large. Max size is 1MB.', 'error');
-                return;
-            }
+    if (!file) {
+        showToast('Please select a file.', 'error');
+        return;
+    }
 
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const adData = {
-                    dataUrl: event.target.result,
-                    type: file.type.startsWith('image/') ? 'image' : 'video',
-                    uploaderId: (userRole === 'admin') ? 'admin' : currentUser.uid,
-                    uploaderRole: userRole,
-                    uploadedAt: serverTimestamp()
-                };
-                try {
-                    const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
-                    await addDoc(adsColRef, adData);
-                    showToast('Ad uploaded successfully!', 'success');
-                    fileInput.value = '';
-                } catch (error) {
-                    console.error("Error uploading ad:", error);
-                    showToast('Failed to upload ad.', 'error');
-                }
-            };
-            reader.readAsDataURL(file);
+    try {
+        const storage = getStorage();
+        const storageRef = ref(storage, `artifacts/${appId}/ads/${Date.now()}-${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+
+        const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
+        await addDoc(adsColRef, {
+            url,
+            caption,
+            createdAt: serverTimestamp()
         });
+
+        showToast('Ad uploaded successfully!', 'success');
+        e.target.reset();
+    } catch (error) {
+        console.error("Ad upload error:", error);
+        showToast('Failed to upload ad.', 'error');
+    }
+});
         
         function listenForAds() {
             const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
