@@ -169,22 +169,21 @@
                 
                 <form id="auth-form">
                     <div class="mb-4">
-                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                        <input type="tel" id="auth-email" class="form-input" pattern="[0-9]{10}" maxlength="10" placeholder="Enter your 10-digit mobile" required>
+                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="auth-email" class="form-input" placeholder="Enter your email" required>
                     </div>
                     <div class="mb-6">
-                        <label for="auth-pin" class="block text-sm font-medium text-gray-700 mb-1">4-Digit PIN</label>
-                        <input type="password" id="auth-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" placeholder="Enter your 4-digit PIN" required>
-                    </div>
+    <label for="auth-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+    <input type="password" id="auth-password" class="form-input" placeholder="Enter your password" required>
+  </div>
                     
                     <div id="auth-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
 
-                    <div class="flex items-center gap-4">
-                        <button type="button" id="login-btn" class="btn btn-primary w-full">Login</button>
-                        <button type="button" id="signup-btn" class="btn btn-outline w-full">Sign Up</button>
-                    </div>
-                </form>
-
+  <div class="flex items-center gap-4">
+    <button type="button" id="login-btn" class="btn btn-primary w-full">Login</button>
+    <button type="button" id="signup-btn" class="btn btn-outline w-full">Sign Up</button>
+  </div>
+</form>
                  <div class="text-center mt-6">
                     <button id="admin-login-prompt" class="text-sm text-gray-600 hover:text-brand-blue bg-transparent border-none p-0 cursor-pointer focus:outline-none focus:underline">Login as Admin / Sub-Admin</button>
                 </div>
@@ -514,8 +513,8 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(userProvidedConfig));
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        const ADMIN_MOBILE = '9603230138';
-        const ADMIN_PIN = '0210';
+        const ADMIN_MOBILE = 'asr082239@gmail.com';
+        const ADMIN_PIN = '021003';
         
         // --- UI Elements ---
         const loadingScreen = document.getElementById('loading-screen');
