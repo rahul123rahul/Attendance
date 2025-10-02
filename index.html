@@ -1,829 +1,1341 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>B.Tech Attendance Tracking System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    /* --- Professional Styles --- */
-    :root {
-      --primary: #0056b3;
-      --secondary: #f5f7fa;
-      --accent: #007bff;
-      --danger: #e74c3c;
-      --success: #27ae60;
-      --warn: #f39c12;
-      --border: #e0e6ed;
-      --radius: 10px;
-    }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--secondary); margin: 0; }
-    .container {
-      max-width: 440px; margin: 48px auto 120px auto; background: #fff;
-      border-radius: var(--radius); box-shadow: 0 2px 16px #0002; padding: 28px 20px 24px 20px;
-    }
-    h2, h3 { color: var(--primary); text-align: center; margin-top: 0; }
-    label { display: block; margin: 12px 0 4px; color: #555; }
-    input, select, textarea {
-      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
-      margin-bottom: 16px; font-size: 1em; background: #fafbfc;
-    }
-    input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
-    button {
-      padding: 10px 20px; border: none; border-radius: 6px; background: var(--accent); color: #fff;
-      font-weight: 600; font-size: 1em; cursor: pointer; margin-right: 8px; transition: background .2s;
-    }
-    button:disabled { background: #ccc; }
-    .danger { background: var(--danger) !important; }
-    .success { background: var(--success) !important; }
-    .warn { background: var(--warn) !important; color: #fff !important; }
-    .info { background: var(--primary) !important; }
-    .row { display: flex; gap: 10px; }
-    .row input { margin-bottom: 0; }
-    .edit-btn, .save-btn, .cancel-btn { font-size: 0.9em; padding: 4px 10px; margin: 0 2px;}
-    .edit-btn { background: var(--accent); }
-    .save-btn { background: var(--success); }
-    .cancel-btn { background: #888; }
-    .subject-list, .enquiry-list, .ads-list, .subadmin-list {
-      width: 100%; border-collapse: collapse; margin-bottom: 18px;
-    }
-    .subject-list th, .subject-list td, .enquiry-list th, .enquiry-list td,
-    .ads-list th, .ads-list td, .subadmin-list th, .subadmin-list td {
-      border: 1px solid var(--border); padding: 8px; text-align: center;
-    }
-    .subject-list th, .enquiry-list th, .ads-list th, .subadmin-list th {
-      background: var(--secondary); font-weight: 600;
-    }
-    .ads-bar {
-      position: fixed; bottom: 0; left: 0; width: 100%; background: #fff;
-      border-top: 1.5px solid var(--border); z-index: 200;
-      box-shadow: 0 -2px 12px #0001; padding: 12px 0 10px 0;
-    }
-    .ads-bar-inner {
-      display: flex; justify-content: center; align-items: flex-end; gap: 30px; flex-wrap: wrap;
-    }
-    .ad-item {
-      display: flex; flex-direction: column; align-items: center; margin: 0 8px;
-      width: 120px; height: 150px; background: #f8fafc; border-radius: 10px; box-shadow: 0 2px 8px #0001;
-      justify-content: center; position: relative;
-    }
-    .ad-media {
-      width: 96px; height: 120px; object-fit: cover; border-radius: 8px;
-      aspect-ratio: 4/5; background: #e0e6ed;
-    }
-    .ad-delete-btn {
-      margin-top: 4px; background: var(--danger); color: #fff; border: none; border-radius: 4px;
-      font-size: 0.84em; padding: 2px 7px; cursor: pointer; position: absolute; top: 4px; right: 4px;
-    }
-    .logout-btn {
-      float: right; background: var(--danger); margin: 0; padding: 7px 16px; font-size: 1em;
-    }
-    .icon-btn { background: none; border: none; cursor: pointer; }
-    .icon-img { width: 28px; vertical-align: middle; }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .note { color: #999; font-size: 0.95em; margin-bottom: 8px; }
-    .detained { color: var(--danger); font-weight: bold; }
-    .safe { color: var(--success); font-weight: bold; }
-    .bunk { color: var(--primary); font-weight: 600; }
-    .forgot-link {
-      color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.98em;
-      margin-left: 6px;
-    }
-    .subject-bunk { font-size: 0.9em; color: var(--primary); font-weight: 500; }
-    .ads-upload-label { font-size: 0.98em; color: #555; }
-    .ads-upload-area { margin-bottom: 10px; }
-    @media (max-width: 600px) {
-      .container { max-width: 99vw; padding: 8px; }
-      .ads-bar-inner { flex-direction: column; gap: 12px; }
-      .ad-item { width: 95vw; max-width: 320px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B.Tech Attendance Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-bg: #f7fafc;
+            --primary-text: #1a202c;
+            --brand-blue: #2b6cb0;
+            --brand-blue-dark: #2c5282;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --danger: #e53e3e;
+            --success: #38a169;
+            --warning: #dd6b20;
+        }
+        body {
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+        .auth-card {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid transparent;
+        }
+        .btn-primary {
+            background-color: var(--brand-blue);
+            color: white;
+            border-color: var(--brand-blue);
+        }
+        .btn-primary:hover {
+            background-color: var(--brand-blue-dark);
+        }
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c53030;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--brand-blue);
+            border-color: var(--brand-blue);
+        }
+        .btn-outline:hover {
+            background-color: #ebf8ff;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: #f7fafc;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        /* Custom Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-backdrop.active .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--brand-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Attendance Progress Bar */
+        .progress-bar-bg {
+            background-color: var(--border-color);
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <!-- Mandatory Page -->
-  <div id="mandatoryPage" class="container" style="display:block;">
-    <h2>B.Tech Attendance Tracker</h2>
-    <p>
-      <b>Welcome!</b> Track your subjects, attendance, and stay compliant with college rules.<br>
-      <b>Minimum Attendance:</b> <span class="safe">75%</span> to avoid detention.<br><br>
-      <ul>
-        <li>Sign up with mobile & 4-digit PIN</li>
-        <li>Track/edit attendance per subject</li>
-        <li>See how many classes you can bunk per subject</li>
-        <li>Admin/Sub-admin can manage ads and enquiries</li>
-      </ul>
-    </p>
-    <button onclick="showAuthPage()">Continue</button>
-  </div>
 
-  <!-- Authentication Page -->
-  <div id="authPage" class="container" style="display:none;">
-    <h2>
-      <img src="https://img.icons8.com/ios-filled/50/0056b3/login-rounded-right.png" class="icon-img" alt="Login">
-      Attendance System
-    </h2>
-    <div style="margin-bottom:18px;">
-      <button onclick="showLogin()">Login</button>
-      <button onclick="showSignup()">Sign Up</button>
-      <button onclick="showAdminLogin()">Admin Login</button>
-    </div>
-    <form id="signupForm" style="display:none;" onsubmit="signup(event)">
-      <label>Mobile Number</label>
-      <input type="tel" id="signupMobile" pattern="[0-9]{10}" maxlength="10" required>
-      <label>4-Digit PIN</label>
-      <input type="password" id="signupPin" pattern="[0-9]{4}" maxlength="4" required>
-      <button type="submit">Sign Up</button>
-    </form>
-    <form id="loginForm" style="display:none;" onsubmit="login(event)">
-      <label>Mobile Number</label>
-      <input type="tel" id="loginMobile" pattern="[0-9]{10}" maxlength="10" required>
-      <label>4-Digit PIN</label>
-      <input type="password" id="loginPin" pattern="[0-9]{4}" maxlength="4" required>
-      <div style="text-align:right;">
-        <span class="forgot-link" onclick="showForgotPin()">Forgot PIN?</span>
-      </div>
-      <button type="submit">Login</button>
-    </form>
-    <form id="adminLoginForm" style="display:none;" onsubmit="adminLogin(event)">
-      <label>Mobile Number</label>
-      <input type="tel" id="adminMobile" pattern="[0-9]{10}" maxlength="10" required>
-      <label>4-Digit PIN</label>
-      <input type="password" id="adminPin" pattern="[0-9]{4}" maxlength="4" required>
-      <button type="submit">Admin Login</button>
-    </form>
-    <!-- Forgot PIN Form -->
-    <form id="forgotPinForm" style="display:none;" onsubmit="resetPin(event)">
-      <label>Registered Mobile Number</label>
-      <input type="tel" id="forgotMobile" pattern="[0-9]{10}" maxlength="10" required>
-      <label>New 4-Digit PIN</label>
-      <input type="password" id="forgotPin1" pattern="[0-9]{4}" maxlength="4" required>
-      <label>Confirm New 4-Digit PIN</label>
-      <input type="password" id="forgotPin2" pattern="[0-9]{4}" maxlength="4" required>
-      <button type="submit" class="success">Reset PIN</button>
-      <button type="button" class="cancel-btn" onclick="showLogin()">Cancel</button>
-    </form>
-  </div>
+    <!-- App Root -->
+    <div id="app">
 
-  <!-- Student Dashboard -->
-  <div id="studentDashboard" class="container" style="display:none;">
-    <div class="flex-between">
-      <h2>Student Dashboard</h2>
-      <button class="logout-btn" onclick="logout()">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/logout-rounded.png" class="icon-img" alt="Logout">
-        Logout
-      </button>
-    </div>
-    <div>
-      <h3>Add Subject</h3>
-      <form id="addSubjectForm" onsubmit="addSubject(event)">
-        <div class="row">
-          <input type="text" id="subjectName" placeholder="Subject Name" required>
-          <input type="number" id="totalClasses" min="1" placeholder="Total Classes" required>
-          <input type="number" id="attendedClasses" min="0" placeholder="Attended Classes" required>
-          <button type="submit" class="info">Add</button>
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[100]">
+            <div class="loader"></div>
+            <p class="mt-4 text-lg font-medium text-gray-600">Loading Attendance System...</p>
         </div>
-      </form>
-      <h3>Your Subjects</h3>
-      <table class="subject-list" id="subjectTable">
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>Total</th>
-            <th>Attended</th>
-            <th>%</th>
-            <th>Bunk</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="subjectList"></tbody>
-      </table>
-      <div id="overallAttendance"></div>
-      <div id="bunkInfo"></div>
-      <h3>Consolidated Attendance Report</h3>
-      <div id="consolidatedReport"></div>
-      <h3>Enquiry Form</h3>
-      <form id="enquiryForm" onsubmit="submitEnquiry(event)">
-        <input type="text" id="enqName" placeholder="Your Name" required>
-        <input type="text" id="enqCollege" placeholder="College Name" required>
-        <input type="email" id="enqEmail" placeholder="Email ID" required>
-        <textarea id="enqDesc" placeholder="Suggestion or Description" required></textarea>
-        <button type="submit" class="success">Submit</button>
-      </form>
+
+        <!-- Authentication Page -->
+        <div id="auth-page" class="hidden">
+            <div class="auth-card">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Attendance Tracker</h1>
+                    <p class="text-gray-500 mt-2">Sign in or create an account to continue</p>
+                </div>
+                
+                <form id="auth-form">
+                    <div class="mb-4">
+                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                        <input type="tel" id="auth-email" class="form-input" pattern="[0-9]{10}" maxlength="10" placeholder="Enter your 10-digit mobile" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="auth-pin" class="block text-sm font-medium text-gray-700 mb-1">4-Digit PIN</label>
+                        <input type="password" id="auth-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" placeholder="Enter your 4-digit PIN" required>
+                    </div>
+                    
+                    <div id="auth-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
+
+                    <div class="flex items-center gap-4">
+                        <button type="button" id="login-btn" class="btn btn-primary w-full">Login</button>
+                        <button type="button" id="signup-btn" class="btn btn-outline w-full">Sign Up</button>
+                    </div>
+                </form>
+
+                 <div class="text-center mt-6">
+                    <a href="#" id="admin-login-prompt" class="text-sm text-gray-600 hover:text-brand-blue">Login as Admin / Sub-Admin</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area (Dashboards) -->
+        <main id="main-content" class="container hidden">
+            <!-- App Header -->
+            <header class="flex items-center justify-between pb-4 border-b border-gray-200 mb-8">
+                 <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Welcome, <span id="user-display-name">User</span>!</h1>
+                    <p class="text-gray-500">Your User ID: <code id="user-id-display" class="bg-gray-100 p-1 rounded"></code></p>
+                 </div>
+                <button id="logout-btn" class="btn btn-danger">
+                    <i data-lucide="log-out" class="w-5 h-5 mr-2"></i>
+                    <span>Logout</span>
+                </button>
+            </header>
+
+            <!-- Student Dashboard -->
+            <div id="student-dashboard" class="hidden">
+                <!-- Dashboard tabs -->
+                <div class="mb-6 border-b border-gray-200">
+                    <nav class="flex -mb-px space-x-6" aria-label="Tabs">
+                        <button onclick="switchTab('attendance')" class="tab-btn active" data-tab="attendance">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-2"></i> Attendance
+                        </button>
+                        <button onclick="switchTab('timetable')" class="tab-btn" data-tab="timetable">
+                            <i data-lucide="calendar-days" class="w-5 h-5 mr-2"></i> Timetable
+                        </button>
+                        <button onclick="switchTab('enquiry')" class="tab-btn" data-tab="enquiry">
+                            <i data-lucide="help-circle" class="w-5 h-5 mr-2"></i> Enquiry
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Attendance Tab Content -->
+                <div id="attendance-tab">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-semibold text-gray-500">Overall Attendance</h3>
+                            <p id="overall-percentage" class="text-4xl font-bold text-brand-blue mt-2">0%</p>
+                            <p id="overall-ratio" class="text-gray-500">0 / 0 classes</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-semibold text-gray-500">Attendance Status</h3>
+                            <p id="overall-status" class="text-2xl font-bold mt-2 text-gray-500">Not enough data</p>
+                            <p id="bunk-info" class="text-gray-500 mt-1">Add subjects to see details.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center">
+                           <button id="open-mark-attendance-modal-btn" class="btn btn-primary w-full mb-3">
+                                <i data-lucide="check-check" class="w-5 h-5 mr-2"></i> Mark Today's Attendance
+                            </button>
+                            <button id="open-add-subject-modal-btn" class="btn btn-outline w-full">
+                                <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Add New Subject
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Subjects</h2>
+                    <div id="subject-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Subject cards will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Timetable Tab Content -->
+                <div id="timetable-tab" class="hidden">
+                     <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-gray-800">Weekly Timetable</h2>
+                            <button id="save-timetable-btn" class="btn btn-primary">
+                                <i data-lucide="save" class="w-5 h-5 mr-2"></i> Save Changes
+                            </button>
+                        </div>
+                        <p class="text-gray-500 mb-4">Enter your subject names for each period. Leave blank if no class.</p>
+                        <div class="overflow-x-auto">
+                            <table id="timetable-grid" class="w-full border-collapse text-center">
+                                <!-- Timetable grid will be injected here -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enquiry Tab Content -->
+                <div id="enquiry-tab" class="hidden">
+                    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-sm">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Submit an Enquiry or Suggestion</h2>
+                        <form id="enquiry-form">
+                            <div class="mb-4">
+                                <label for="enq-name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                                <input type="text" id="enq-name" class="form-input" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="enq-college" class="block text-sm font-medium text-gray-700 mb-1">College Name</label>
+                                <input type="text" id="enq-college" class="form-input" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="enq-email" class="block text-sm font-medium text-gray-700 mb-1">Email ID</label>
+                                <input type="email" id="enq-email" class="form-input" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="enq-desc" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea id="enq-desc" rows="4" class="form-input" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Submit Enquiry</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin & Sub-Admin Dashboard -->
+            <div id="admin-dashboard" class="hidden">
+                 <div class="mb-6 border-b border-gray-200">
+                    <nav class="flex -mb-px space-x-6" aria-label="Tabs">
+                        <button onclick="switchAdminTab('enquiries-admin')" class="admin-tab-btn active" data-tab="enquiries-admin">
+                           <i data-lucide="archive" class="w-5 h-5 mr-2"></i> Enquiries
+                        </button>
+                        <button onclick="switchAdminTab('ads-admin')" class="admin-tab-btn" data-tab="ads-admin">
+                           <i data-lucide="megaphone" class="w-5 h-5 mr-2"></i> Advertisements
+                        </button>
+                        <button id="subadmin-mgmt-tab-btn" onclick="switchAdminTab('subadmins-admin')" class="admin-tab-btn" data-tab="subadmins-admin">
+                            <i data-lucide="users" class="w-5 h-5 mr-2"></i> Sub-Admins
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Enquiries Tab -->
+                <div id="enquiries-admin-tab">
+                     <h2 class="text-2xl font-bold text-gray-800 mb-4">User Enquiries</h2>
+                     <div id="admin-enquiry-list" class="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <!-- Enquiries Table -->
+                     </div>
+                </div>
+
+                <!-- Ads Tab -->
+                <div id="ads-admin-tab" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h2 class="text-xl font-bold text-gray-800 mb-4">Upload Ad</h2>
+                                <form id="ad-form">
+                                    <label for="ad-file" class="block text-sm font-medium text-gray-700 mb-2">Image or Video (4:5 ratio)</label>
+                                    <input type="file" id="ad-file" accept="image/*,video/*" class="form-input" required>
+                                    <p class="text-xs text-gray-500 mt-1">Max file size: 1MB.</p>
+                                    <button type="submit" class="btn btn-primary w-full mt-4">Upload</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                             <h2 class="text-xl font-bold text-gray-800 mb-4">Manage Ads</h2>
+                             <div id="admin-ads-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Ads will be listed here -->
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sub-Admins Tab (Admin only) -->
+                <div id="subadmins-admin-tab" class="hidden">
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h2 class="text-xl font-bold text-gray-800 mb-4">Add Sub-Admin</h2>
+                                <form id="add-subadmin-form">
+                                    <div class="mb-4">
+                                        <label for="subadmin-mobile" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                                        <input type="tel" id="subadmin-mobile" class="form-input" pattern="[0-9]{10}" maxlength="10" required>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="subadmin-pin" class="block text-sm font-medium text-gray-700 mb-1">4-Digit PIN</label>
+                                        <input type="password" id="subadmin-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-full">Add Sub-Admin</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                             <h2 class="text-xl font-bold text-gray-800 mb-4">Current Sub-Admins</h2>
+                             <div id="subadmin-list" class="bg-white rounded-lg shadow-sm overflow-hidden">
+                                <!-- Sub-Admins Table -->
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Ads Bar -->
+        <footer id="ads-bar" class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-sm border-t border-gray-200 p-4 shadow-lg z-40 hidden">
+            <div id="ads-bar-inner" class="max-w-7xl mx-auto flex items-center justify-center space-x-4 overflow-x-auto">
+                <!-- Ads will be injected here -->
+            </div>
+        </footer>
+
     </div>
-  </div>
 
-  <!-- Admin Dashboard -->
-  <div id="adminDashboard" class="container" style="display:none;">
-    <div class="flex-between">
-      <h2>Admin Panel</h2>
-      <button class="logout-btn" onclick="logout()">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/logout-rounded.png" class="icon-img" alt="Logout">
-        Logout
-      </button>
+    <!-- Modals -->
+    <!-- Add/Edit Subject Modal -->
+    <div id="subject-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="subject-modal-title" class="text-xl font-bold">Add New Subject</h2>
+                <button onclick="closeModal('subject-modal')" class="text-gray-500 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="subject-form">
+                <input type="hidden" id="subject-id">
+                <div class="mb-4">
+                    <label for="subject-name" class="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
+                    <input type="text" id="subject-name" class="form-input" required>
+                </div>
+                <div class="flex gap-4 mb-4">
+                    <div class="w-1/2">
+                         <label for="total-classes" class="block text-sm font-medium text-gray-700 mb-1">Total Classes</label>
+                         <input type="number" id="total-classes" class="form-input" min="1" required>
+                    </div>
+                    <div class="w-1/2">
+                        <label for="attended-classes" class="block text-sm font-medium text-gray-700 mb-1">Attended Classes</label>
+                        <input type="number" id="attended-classes" class="form-input" min="0" required>
+                    </div>
+                </div>
+                <div id="subject-form-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('subject-modal')" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Subject</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <h3>Add Sub Admin</h3>
-    <form id="addSubAdminForm" onsubmit="addSubAdmin(event)">
-      <div class="row">
-        <input type="tel" id="subAdminMobile" pattern="[0-9]{10}" maxlength="10" placeholder="Mobile Number" required>
-        <input type="password" id="subAdminPin" pattern="[0-9]{4}" maxlength="4" placeholder="4-Digit PIN" required>
-        <button type="submit" class="info">Add</button>
-      </div>
-    </form>
-    <h3>Sub Admins</h3>
-    <table class="subadmin-list" id="subAdminTable">
-      <thead>
-        <tr>
-          <th>Mobile</th>
-        </tr>
-      </thead>
-      <tbody id="subAdminList"></tbody>
-    </table>
-    <h3>Enquiries</h3>
-    <table class="enquiry-list" id="adminEnquiryTable">
-      <thead>
-        <tr>
-          <th>Name</th><th>College</th><th>Email</th><th>Description</th><th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="adminEnquiryList"></tbody>
-    </table>
-    <h3>Upload Advertisement</h3>
-    <form id="adForm" class="ads-upload-area" onsubmit="uploadAd(event)">
-      <label class="ads-upload-label">Image or Video (4:5 aspect ratio recommended)</label>
-      <input type="file" id="adFile" accept="image/*,video/*" required>
-      <button type="submit" class="success">Upload</button>
-    </form>
-    <h3>All Ads</h3>
-    <div id="adminAdsList"></div>
-  </div>
-
-  <!-- Sub Admin Dashboard -->
-  <div id="subAdminDashboard" class="container" style="display:none;">
-    <div class="flex-between">
-      <h2>Sub Admin Panel</h2>
-      <button class="logout-btn" onclick="logout()">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/logout-rounded.png" class="icon-img" alt="Logout">
-        Logout
-      </button>
+    
+    <!-- Mark Attendance Modal -->
+    <div id="mark-attendance-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Mark Today's Attendance</h2>
+                <button onclick="closeModal('mark-attendance-modal')" class="text-gray-500 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div id="daily-classes-list">
+                <!-- Today's classes will be listed here -->
+            </div>
+             <div class="flex justify-end mt-6">
+                 <button type="button" onclick="closeModal('mark-attendance-modal')" class="btn btn-primary">Done</button>
+            </div>
+        </div>
     </div>
-    <h3>Enquiries</h3>
-    <table class="enquiry-list" id="subAdminEnquiryTable">
-      <thead>
-        <tr>
-          <th>Name</th><th>College</th><th>Email</th><th>Description</th><th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="subAdminEnquiryList"></tbody>
-    </table>
-    <h3>Upload Advertisement</h3>
-    <form id="subAdForm" class="ads-upload-area" onsubmit="uploadAd(event)">
-      <label class="ads-upload-label">Image or Video (4:5 aspect ratio recommended)</label>
-      <input type="file" id="subAdFile" accept="image/*,video/*" required>
-      <button type="submit" class="success">Upload</button>
-    </form>
-    <h3>Your Ads</h3>
-    <div id="subAdminAdsList"></div>
-  </div>
+    
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Admin / Sub-Admin Login</h2>
+            <form id="admin-login-form">
+                <div class="mb-4">
+                    <label for="admin-mobile" class="block text-sm font-medium text-gray-700 mb-1">Admin Mobile</label>
+                    <input type="tel" id="admin-mobile" class="form-input" pattern="[0-9]{10}" maxlength="10" required>
+                </div>
+                <div class="mb-4">
+                    <label for="admin-pin" class="block text-sm font-medium text-gray-700 mb-1">Admin PIN</label>
+                    <input type="password" id="admin-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" required>
+                </div>
+                <div id="admin-login-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('admin-login-modal')" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg opacity-0 transform translate-y-2 transition-all duration-300 z-[101]">
+        <p id="toast-message"></p>
+    </div>
 
-  <!-- Fixed Ads Bar (for all dashboards) -->
-  <div class="ads-bar" id="adsBar" style="display:none;">
-    <div class="ads-bar-inner" id="adsBarInner"></div>
-  </div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // --- Firebase Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            signInAnonymously,
+            signInWithCustomToken
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            setDoc,
+            getDoc,
+            collection,
+            addDoc,
+            onSnapshot,
+            updateDoc,
+            deleteDoc,
+            writeBatch,
+            query,
+            where,
+            getDocs,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  <script>
-    // --- Data Storage Helpers ---
-    function getData(key, fallback) { return JSON.parse(localStorage.getItem(key)) || fallback; }
-    function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+        // --- App State ---
+        let auth, db;
+        let currentUser = null;
+        let userRole = 'student';
+        let unsubscribeSubjects = null;
+        let unsubscribeEnquiries = null;
+        let unsubscribeAds = null;
+        let unsubscribeSubAdmins = null;
 
-    // --- Mandatory Page ---
-    function showAuthPage() {
-      document.getElementById('mandatoryPage').style.display = 'none';
-      document.getElementById('authPage').style.display = 'block';
-    }
+        // --- Config ---
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-    // --- Authentication Logic ---
-    function showLogin() {
-      document.getElementById('signupForm').style.display = 'none';
-      document.getElementById('adminLoginForm').style.display = 'none';
-      document.getElementById('forgotPinForm').style.display = 'none';
-      document.getElementById('loginForm').style.display = 'block';
-    }
-    function showSignup() {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('adminLoginForm').style.display = 'none';
-      document.getElementById('forgotPinForm').style.display = 'none';
-      document.getElementById('signupForm').style.display = 'block';
-    }
-    function showAdminLogin() {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('signupForm').style.display = 'none';
-      document.getElementById('forgotPinForm').style.display = 'none';
-      document.getElementById('adminLoginForm').style.display = 'block';
-    }
-    function showForgotPin() {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('signupForm').style.display = 'none';
-      document.getElementById('adminLoginForm').style.display = 'none';
-      document.getElementById('forgotPinForm').style.display = 'block';
-    }
+        const ADMIN_MOBILE = '9603230138';
+        const ADMIN_PIN = '0210';
+        
+        // --- UI Elements ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const authPage = document.getElementById('auth-page');
+        const mainContent = document.getElementById('main-content');
+        const studentDashboard = document.getElementById('student-dashboard');
+        const adminDashboard = document.getElementById('admin-dashboard');
 
-    // --- Signup ---
-    function signup(e) {
-      e.preventDefault();
-      const mobile = document.getElementById('signupMobile').value.trim();
-      const pin = document.getElementById('signupPin').value.trim();
-      if (mobile === '9603230138') { alert("This number is reserved for Admin."); return; }
-      let users = getData('users', []);
-      if (users.find(u => u.mobile === mobile)) {
-        alert("Mobile already registered!");
-        return;
-      }
-      users.push({ mobile, pin, role: 'student', subjects: [] });
-      setData('users', users);
-      alert("Signup successful! Please login.");
-      showLogin();
-    }
+        // --- Helper Functions ---
+        const showToast = (message, type = 'success') => {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('bg-gray-800', 'bg-red-600', 'bg-green-600');
+            if (type === 'error') {
+                toast.classList.add('bg-red-600');
+            } else if(type === 'success') {
+                 toast.classList.add('bg-green-600');
+            } else {
+                 toast.classList.add('bg-gray-800');
+            }
+            
+            toast.classList.add('opacity-100', 'translate-y-0');
+            toast.classList.remove('opacity-0', 'translate-y-2');
 
-    // --- Login ---
-    function login(e) {
-      e.preventDefault();
-      const mobile = document.getElementById('loginMobile').value.trim();
-      const pin = document.getElementById('loginPin').value.trim();
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile && u.pin === pin && u.role === 'student');
-      if (!user) { alert("Invalid credentials!"); return; }
-      localStorage.setItem('loggedInUser', mobile);
-      localStorage.setItem('userRole', 'student');
-      showStudentDashboard();
-    }
-
-    // --- Forgot PIN (Student only) ---
-    function resetPin(e) {
-      e.preventDefault();
-      const mobile = document.getElementById('forgotMobile').value.trim();
-      const pin1 = document.getElementById('forgotPin1').value.trim();
-      const pin2 = document.getElementById('forgotPin2').value.trim();
-      if (pin1 !== pin2) { alert("PINs do not match."); return; }
-      if (mobile === '9603230138') { alert("Cannot reset admin PIN."); return; }
-      let subAdmins = getData('subAdmins', []);
-      if (subAdmins.find(s => s.mobile === mobile)) {
-        alert("Cannot reset sub-admin PIN here.");
-        return;
-      }
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile && u.role === 'student');
-      if (!user) { alert("Mobile not registered as student."); return; }
-      user.pin = pin1;
-      setData('users', users);
-      alert("PIN reset successfully! Please login.");
-      showLogin();
-    }
-
-    // --- Admin & Sub Admin Login ---
-    function adminLogin(e) {
-      e.preventDefault();
-      const mobile = document.getElementById('adminMobile').value.trim();
-      const pin = document.getElementById('adminPin').value.trim();
-      if (mobile === '9603230138' && pin === '0210') {
-        localStorage.setItem('loggedInUser', mobile);
-        localStorage.setItem('userRole', 'admin');
-        showAdminDashboard();
-        return;
-      }
-      let subAdmins = getData('subAdmins', []);
-      let sub = subAdmins.find(s => s.mobile === mobile && s.pin === pin);
-      if (sub) {
-        localStorage.setItem('loggedInUser', mobile);
-        localStorage.setItem('userRole', 'subadmin');
-        showSubAdminDashboard();
-        return;
-      }
-      alert("Invalid admin/sub-admin credentials!");
-    }
-
-    // --- Logout ---
-    function logout() {
-      localStorage.removeItem('loggedInUser');
-      localStorage.removeItem('userRole');
-      location.reload();
-    }
-
-    // --- Student Dashboard ---
-    function showStudentDashboard() {
-      document.getElementById('authPage').style.display = 'none';
-      document.getElementById('studentDashboard').style.display = 'block';
-      document.getElementById('adminDashboard').style.display = 'none';
-      document.getElementById('subAdminDashboard').style.display = 'none';
-      document.getElementById('adsBar').style.display = 'block';
-      renderSubjects();
-      renderOverallAttendance();
-      renderConsolidatedReport();
-      renderAdsBar();
-    }
-
-    // --- Admin Dashboard ---
-    function showAdminDashboard() {
-      document.getElementById('authPage').style.display = 'none';
-      document.getElementById('studentDashboard').style.display = 'none';
-      document.getElementById('adminDashboard').style.display = 'block';
-      document.getElementById('subAdminDashboard').style.display = 'none';
-      document.getElementById('adsBar').style.display = 'block';
-      renderSubAdmins();
-      renderAdminEnquiries();
-      renderAdminAds();
-      renderAdsBar();
-    }
-
-    // --- Sub Admin Dashboard ---
-    function showSubAdminDashboard() {
-      document.getElementById('authPage').style.display = 'none';
-      document.getElementById('studentDashboard').style.display = 'none';
-      document.getElementById('adminDashboard').style.display = 'none';
-      document.getElementById('subAdminDashboard').style.display = 'block';
-      document.getElementById('adsBar').style.display = 'block';
-      renderSubAdminEnquiries();
-      renderSubAdminAds();
-      renderAdsBar();
-    }
-
-    // --- On Load: Auto-login if session exists ---
-    window.onload = function() {
-      let user = localStorage.getItem('loggedInUser');
-      let role = localStorage.getItem('userRole');
-      if (user && role) {
-        if (role === 'student') showStudentDashboard();
-        else if (role === 'admin') showAdminDashboard();
-        else if (role === 'subadmin') showSubAdminDashboard();
-      }
-    }
-
-    // --- Subject Management ---
-    function addSubject(e) {
-      e.preventDefault();
-      let name = document.getElementById('subjectName').value.trim();
-      let total = parseInt(document.getElementById('totalClasses').value);
-      let attended = parseInt(document.getElementById('attendedClasses').value);
-      if (attended > total) { alert("Attended cannot exceed total classes."); return; }
-      let mobile = localStorage.getItem('loggedInUser');
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile);
-      if (!user.subjects) user.subjects = [];
-      user.subjects.push({ name, total, attended });
-      setData('users', users);
-      document.getElementById('addSubjectForm').reset();
-      renderSubjects();
-      renderOverallAttendance();
-      renderConsolidatedReport();
-    }
-
-    function renderSubjects() {
-      let mobile = localStorage.getItem('loggedInUser');
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile);
-      let tbody = document.getElementById('subjectList');
-      tbody.innerHTML = '';
-      if (!user.subjects || user.subjects.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">No subjects added.</td></tr>';
-        return;
-      }
-      user.subjects.forEach((subj, idx) => {
-        let perc = subj.total > 0 ? ((subj.attended / subj.total) * 100).toFixed(1) : '0.0';
-        let bunk = '';
-        if (perc >= 75) {
-          let maxBunk = Math.floor((subj.attended / 0.75) - subj.total);
-          bunk = `<span class="subject-bunk">${maxBunk > 0 ? maxBunk : 0}</span>`;
-        } else {
-          bunk = `<span style="color:#888;">-</span>`;
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-2');
+            }, 3000);
+        };
+        
+        const openModal = (modalId) => document.getElementById(modalId).classList.add('active');
+        const closeModal = (modalId) => document.getElementById(modalId).classList.remove('active');
+        
+        const showAuthError = (message, form = 'auth') => {
+            const errorEl = document.getElementById(`${form}-error`);
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
         }
-        // Editable cells
-        tbody.innerHTML += `<tr>
-          <td>${subj.name}</td>
-          <td>
-            <span id="totalDisplay${idx}">${subj.total}</span>
-            <input type="number" id="totalEdit${idx}" value="${subj.total}" min="1" style="display:none;width:50px;">
-          </td>
-          <td>
-            <span id="attendedDisplay${idx}">${subj.attended}</span>
-            <input type="number" id="attendedEdit${idx}" value="${subj.attended}" min="0" max="${subj.total}" style="display:none;width:50px;">
-          </td>
-          <td id="perc${idx}">${perc}%</td>
-          <td id="bunk${idx}">${bunk}</td>
-          <td>
-            <button class="edit-btn" id="editBtn${idx}" onclick="editSubject(${idx})">Edit</button>
-            <button class="save-btn" id="saveBtn${idx}" style="display:none;" onclick="saveSubject(${idx})">Save</button>
-            <button class="cancel-btn" id="cancelBtn${idx}" style="display:none;" onclick="cancelEdit(${idx})">Cancel</button>
-            <button class="danger" onclick="deleteSubject(${idx})">Delete</button>
-          </td>
-        </tr>`;
-      });
-    }
+        const hideAuthError = (form = 'auth') => document.getElementById(`${form}-error`).classList.add('hidden');
 
-    function editSubject(idx) {
-      document.getElementById(`totalDisplay${idx}`).style.display = 'none';
-      document.getElementById(`attendedDisplay${idx}`).style.display = 'none';
-      document.getElementById(`totalEdit${idx}`).style.display = 'inline-block';
-      document.getElementById(`attendedEdit${idx}`).style.display = 'inline-block';
-      document.getElementById(`editBtn${idx}`).style.display = 'none';
-      document.getElementById(`saveBtn${idx}`).style.display = 'inline-block';
-      document.getElementById(`cancelBtn${idx}`).style.display = 'inline-block';
-    }
-    function saveSubject(idx) {
-      let total = parseInt(document.getElementById(`totalEdit${idx}`).value);
-      let attended = parseInt(document.getElementById(`attendedEdit${idx}`).value);
-      if (attended > total) { alert("Attended cannot exceed total classes."); return; }
-      let mobile = localStorage.getItem('loggedInUser');
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile);
-      user.subjects[idx].total = total;
-      user.subjects[idx].attended = attended;
-      setData('users', users);
-      renderSubjects();
-      renderOverallAttendance();
-      renderConsolidatedReport();
-    }
-    function cancelEdit(idx) { renderSubjects(); }
-    function deleteSubject(idx) {
-      let mobile = localStorage.getItem('loggedInUser');
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile);
-      user.subjects.splice(idx, 1);
-      setData('users', users);
-      renderSubjects();
-      renderOverallAttendance();
-      renderConsolidatedReport();
-    }
 
-    function renderOverallAttendance() {
-      let mobile = localStorage.getItem('loggedInUser');
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile);
-      let total = 0, attended = 0;
-      if (user.subjects && user.subjects.length > 0) {
-        user.subjects.forEach(s => { total += s.total; attended += s.attended; });
-      }
-      let perc = total > 0 ? ((attended / total) * 100).toFixed(1) : '0.0';
-      let msg = '';
-      if (perc < 65) msg = `<span class='detained'>Your attendance is very low (${perc}%). High risk of detention!</span>`;
-      else if (perc < 75) msg = `<span class='warn'>Warning: Attendance is ${perc}%. You may be detained.</span>`;
-      else msg = `<span class='safe'>Safe! Attendance: ${perc}%</span>`;
-      document.getElementById('overallAttendance').innerHTML = `<b>Overall Attendance:</b> ${attended}/${total} (${perc}%)<br>${msg}`;
-      // Bunk calculation
-      let bunkMsg = '';
-      if (perc >= 75 && total > 0) {
-        let maxBunk = Math.floor((attended / 0.75) - total);
-        bunkMsg = `<b>You can safely bunk <span class='bunk'>${maxBunk}</span> more class(es) overall.</b>`;
-      }
-      document.getElementById('bunkInfo').innerHTML = bunkMsg;
-    }
+        // --- Initialization ---
+        functioninitializeAppAndAuth() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                setupAuthListener();
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loadingScreen.innerHTML = `<p class="text-red-500">Error: Could not connect to the backend.</p>`;
+            }
+        }
+        
+        // --- Auth Listener ---
+        function setupAuthListener() {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    await fetchUserRoleAndSetupDashboard(user.uid);
+                } else {
+                    currentUser = null;
+                    showPage('auth');
+                }
+            });
 
-    function renderConsolidatedReport() {
-      let mobile = localStorage.getItem('loggedInUser');
-      let users = getData('users', []);
-      let user = users.find(u => u.mobile === mobile);
-      let total = 0, attended = 0;
-      if (user.subjects && user.subjects.length > 0) {
-        user.subjects.forEach(s => { total += s.total; attended += s.attended; });
-      }
-      let perc = total > 0 ? ((attended / total) * 100).toFixed(1) : '0.0';
-      document.getElementById('consolidatedReport').innerHTML =
-        `<b>Total Classes:</b> ${total}<br><b>Attended:</b> ${attended}<br><b>Attendance:</b> ${perc}%`;
-    }
+             // Authenticate with provided token or anonymously
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                signInWithCustomToken(auth, __initial_auth_token).catch(err => {
+                    console.error("Custom token sign-in failed:", err);
+                    signInAnonymously(auth); // Fallback
+                });
+            } else {
+                signInAnonymously(auth);
+            }
+        }
+        
+        async function fetchUserRoleAndSetupDashboard(uid) {
+            const userDocRef = doc(db, `artifacts/${appId}/users/${uid}`);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                userRole = userData.role || 'student';
+                document.getElementById('user-display-name').textContent = userData.mobile;
+                document.getElementById('user-id-display').textContent = uid.substring(0, 10) + '...';
+                setupDashboard(userRole);
+            } else {
+                // This might be a new user, default to student
+                userRole = 'student';
+                setupDashboard('student');
+            }
+        }
 
-    // --- Enquiry Form ---
-    function submitEnquiry(e) {
-      e.preventDefault();
-      let name = document.getElementById('enqName').value.trim();
-      let college = document.getElementById('enqCollege').value.trim();
-      let email = document.getElementById('enqEmail').value.trim();
-      let desc = document.getElementById('enqDesc').value.trim();
-      let enquiries = getData('enquiries', []);
-      enquiries.push({ name, college, email, desc });
-      setData('enquiries', enquiries);
-      alert("Enquiry submitted!");
-      document.getElementById('enquiryForm').reset();
-      renderAdminEnquiries();
-      renderSubAdminEnquiries();
-    }
+        function showPage(page) {
+            loadingScreen.classList.add('hidden');
+            authPage.classList.add('hidden');
+            mainContent.classList.add('hidden');
+            document.getElementById('ads-bar').classList.add('hidden');
 
-    // --- Admin: Sub Admin Management ---
-    function addSubAdmin(e) {
-      e.preventDefault();
-      let mobile = document.getElementById('subAdminMobile').value.trim();
-      let pin = document.getElementById('subAdminPin').value.trim();
-      if (mobile === '9603230138') { alert("This number is reserved for Admin."); return; }
-      let subAdmins = getData('subAdmins', []);
-      if (subAdmins.find(s => s.mobile === mobile)) {
-        alert("Sub Admin already exists!");
-        return;
-      }
-      subAdmins.push({ mobile, pin });
-      setData('subAdmins', subAdmins);
-      alert("Sub Admin added!");
-      document.getElementById('addSubAdminForm').reset();
-      renderSubAdmins();
-    }
+            if (page === 'auth') {
+                authPage.classList.remove('hidden');
+            } else if (page === 'dashboard') {
+                mainContent.classList.remove('hidden');
+                document.getElementById('ads-bar').classList.remove('hidden');
+            }
+        }
 
-    function renderSubAdmins() {
-      let subAdmins = getData('subAdmins', []);
-      let tbody = document.getElementById('subAdminList');
-      tbody.innerHTML = '';
-      if (subAdmins.length === 0) {
-        tbody.innerHTML = '<tr><td>No sub admins.</td></tr>';
-        return;
-      }
-      subAdmins.forEach(sa => {
-        tbody.innerHTML += `<tr><td>${sa.mobile}</td></tr>`;
-      });
-    }
+        function setupDashboard(role) {
+            studentDashboard.classList.add('hidden');
+            adminDashboard.classList.add('hidden');
+            
+            // Detach previous listeners
+            if(unsubscribeSubjects) unsubscribeSubjects();
+            if(unsubscribeEnquiries) unsubscribeEnquiries();
+            if(unsubscribeAds) unsubscribeAds();
+            if(unsubscribeSubAdmins) unsubscribeSubAdmins();
+            
+            listenForAds(); // All roles see ads
 
-    // --- Admin: Enquiry Management ---
-    function renderAdminEnquiries() {
-      let enquiries = getData('enquiries', []);
-      let tbody = document.getElementById('adminEnquiryList');
-      tbody.innerHTML = '';
-      if (enquiries.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">No enquiries yet.</td></tr>';
-        return;
-      }
-      enquiries.forEach((enq, idx) => {
-        tbody.innerHTML += `<tr>
-          <td>${enq.name}</td>
-          <td>${enq.college}</td>
-          <td>${enq.email}</td>
-          <td>${enq.desc}</td>
-          <td><button class="danger" onclick="deleteEnquiry(${idx})">Delete</button></td>
-        </tr>`;
-      });
-    }
+            if (role === 'student') {
+                studentDashboard.classList.remove('hidden');
+                listenForSubjects();
+                loadTimetable();
+            } else {
+                adminDashboard.classList.remove('hidden');
+                document.getElementById('subadmin-mgmt-tab-btn').style.display = (role === 'admin') ? 'flex' : 'none';
+                listenForEnquiries();
+                if(role === 'admin') listenForSubAdmins();
+                switchAdminTab('enquiries-admin'); // Default tab
+            }
+            showPage('dashboard');
+        }
 
-    function deleteEnquiry(idx) {
-      let enquiries = getData('enquiries', []);
-      enquiries.splice(idx, 1);
-      setData('enquiries', enquiries);
-      renderAdminEnquiries();
-      renderSubAdminEnquiries();
-    }
+        // --- Authentication Logic ---
+        async function handleSignup(mobile, pin) {
+            const email = `${mobile}@attendance.app`;
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pin);
+                const user = userCredential.user;
+                
+                // Create user profile in Firestore
+                const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}`);
+                await setDoc(userDocRef, {
+                    mobile: mobile,
+                    role: 'student',
+                    createdAt: serverTimestamp()
+                });
+                
+                showToast("Signup successful! Welcome.", "success");
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    showAuthError("This mobile number is already registered.");
+                } else {
+                    showAuthError("Signup failed. Please try again.");
+                }
+                console.error("Signup error:", error);
+            }
+        }
 
-    // --- Sub Admin: Enquiry Management ---
-    function renderSubAdminEnquiries() {
-      let enquiries = getData('enquiries', []);
-      let tbody = document.getElementById('subAdminEnquiryList');
-      tbody.innerHTML = '';
-      if (enquiries.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">No enquiries yet.</td></tr>';
-        return;
-      }
-      enquiries.forEach((enq, idx) => {
-        tbody.innerHTML += `<tr>
-          <td>${enq.name}</td>
-          <td>${enq.college}</td>
-          <td>${enq.email}</td>
-          <td>${enq.desc}</td>
-          <td><button class="danger" onclick="deleteEnquiry(${idx})">Delete</button></td>
-        </tr>`;
-      });
-    }
+        async function handleLogin(mobile, pin) {
+            const email = `${mobile}@attendance.app`;
+            try {
+                await signInWithEmailAndPassword(auth, email, pin);
+            } catch (error) {
+                showAuthError("Invalid mobile number or PIN.");
+                console.error("Login error:", error);
+            }
+        }
+        
+        async function handleAdminLogin(mobile, pin) {
+            hideAuthError('admin-login');
+            if (mobile === ADMIN_MOBILE && pin === ADMIN_PIN) {
+                // This is the main admin. For this demo, we can't create a separate auth user.
+                // In a real app, the admin would have a proper account. We'll simulate by setting state.
+                userRole = 'admin';
+                document.getElementById('user-display-name').textContent = 'Main Admin';
+                document.getElementById('user-id-display').textContent = 'admin';
+                setupDashboard('admin');
+                closeModal('admin-login-modal');
+                return;
+            }
 
-    // --- Advertisement Management ---
-    function uploadAd(e) {
-      e.preventDefault();
-      let input = e.target.querySelector('input[type="file"]');
-      let file = input.files[0];
-      if (!file) return;
-      let reader = new FileReader();
-      reader.onload = function(ev) {
-        let ads = getData('ads', []);
-        let uploader = localStorage.getItem('loggedInUser');
-        let role = localStorage.getItem('userRole');
-        let type = file.type.startsWith('image') ? 'image' : 'video';
-        ads.push({
-          data: ev.target.result,
-          type: type,
-          uploader: uploader,
-          uploaderRole: role,
-          timestamp: Date.now()
+            // Check for sub-admin
+            const subAdminsRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
+            const q = query(subAdminsRef, where("mobile", "==", mobile));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                showAuthError("No account found for this mobile number.", 'admin-login');
+                return;
+            }
+            
+            const subAdminDoc = querySnapshot.docs[0];
+            const subAdminData = subAdminDoc.data();
+
+            if (subAdminData.pin === pin) {
+                userRole = 'subadmin';
+                document.getElementById('user-display-name').textContent = `Sub-Admin (${mobile})`;
+                document.getElementById('user-id-display').textContent = subAdminDoc.id.substring(0,10) + '...';
+                currentUser = { uid: subAdminDoc.id }; // Simulate user object for consistency
+                setupDashboard('subadmin');
+                closeModal('admin-login-modal');
+            } else {
+                 showAuthError("Incorrect PIN.", 'admin-login');
+            }
+        }
+
+        async function handleLogout() {
+            // For simulated admin/sub-admin, just reload
+            if (userRole === 'admin' || userRole === 'subadmin') {
+                window.location.reload();
+                return;
+            }
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('signup-btn').addEventListener('click', () => {
+            const mobile = document.getElementById('auth-email').value;
+            const pin = document.getElementById('auth-pin').value;
+            if (mobile.length !== 10 || pin.length !== 4) {
+                 showAuthError("Please enter a valid 10-digit mobile and 4-digit PIN.");
+                 return;
+            }
+            hideAuthError();
+            handleSignup(mobile, pin);
         });
-        setData('ads', ads);
-        renderAdsBar();
-        if (role === 'admin') renderAdminAds();
-        else if (role === 'subadmin') renderSubAdminAds();
-        alert("Ad uploaded!");
-        input.value = '';
-      };
-      reader.readAsDataURL(file);
-    }
 
-    // --- Ads Bar for All Users (4:5 ratio) ---
-    function renderAdsBar() {
-      let ads = getData('ads', []);
-      let adsBarInner = document.getElementById('adsBarInner');
-      adsBarInner.innerHTML = '';
-      if (ads.length === 0) {
-        adsBarInner.innerHTML = '<span style="color:#888;">No ads yet.</span>';
-        return;
-      }
-      let user = localStorage.getItem('loggedInUser');
-      let role = localStorage.getItem('userRole');
-      ads.forEach((ad, idx) => {
-        let adHtml = '';
-        if (ad.type === 'image')
-          adHtml = `<img class="ad-media" src="${ad.data}" alt="Ad">`;
-        else
-          adHtml = `<video class="ad-media" src="${ad.data}" controls></video>`;
-        let delBtn = '';
-        if ((role === 'admin' && ad.uploader === user) || (role === 'subadmin' && ad.uploader === user)) {
-          delBtn = `<button class="ad-delete-btn" onclick="deleteAd(${idx})">Delete</button>`;
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const mobile = document.getElementById('auth-email').value;
+            const pin = document.getElementById('auth-pin').value;
+            if (!mobile || !pin) return;
+            hideAuthError();
+            handleLogin(mobile, pin);
+        });
+        
+        document.getElementById('admin-login-prompt').addEventListener('click', (e) => {
+            e.preventDefault();
+            openModal('admin-login-modal');
+        });
+
+        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const mobile = document.getElementById('admin-mobile').value;
+            const pin = document.getElementById('admin-pin').value;
+            handleAdminLogin(mobile, pin);
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+        // --- Student: Subject Management ---
+        const subjectModalBtn = document.getElementById('open-add-subject-modal-btn');
+        const subjectForm = document.getElementById('subject-form');
+
+        subjectModalBtn.addEventListener('click', () => {
+            subjectForm.reset();
+            document.getElementById('subject-id').value = '';
+            document.getElementById('subject-modal-title').textContent = 'Add New Subject';
+            document.getElementById('subject-form-error').classList.add('hidden');
+            openModal('subject-modal');
+        });
+
+        subjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('subject-name').value.trim();
+            const total = parseInt(document.getElementById('total-classes').value);
+            const attended = parseInt(document.getElementById('attended-classes').value);
+            const subjectId = document.getElementById('subject-id').value;
+
+            if (attended > total) {
+                document.getElementById('subject-form-error').textContent = 'Attended classes cannot be more than total classes.';
+                document.getElementById('subject-form-error').classList.remove('hidden');
+                return;
+            }
+            
+            const subjectData = { name, total, attended };
+            const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
+
+            try {
+                if (subjectId) {
+                    // Update existing
+                    const subjectDocRef = doc(subjectsColRef, subjectId);
+                    await updateDoc(subjectDocRef, subjectData);
+                    showToast('Subject updated successfully!');
+                } else {
+                    // Add new
+                    await addDoc(subjectsColRef, subjectData);
+                    showToast('Subject added successfully!');
+                }
+                closeModal('subject-modal');
+            } catch (error) {
+                console.error("Error saving subject:", error);
+                showToast('Failed to save subject.', 'error');
+            }
+        });
+        
+        async function deleteSubject(subjectId) {
+            if (!confirm('Are you sure you want to delete this subject?')) return;
+            try {
+                const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
+                await deleteDoc(subjectDocRef);
+                showToast('Subject deleted.');
+            } catch (error) {
+                console.error("Error deleting subject:", error);
+                showToast('Failed to delete subject.', 'error');
+            }
         }
-        adsBarInner.innerHTML += `<div class="ad-item">${adHtml}${delBtn}</div>`;
-      });
-      document.getElementById('adsBar').style.display = 'block';
-    }
 
-    // --- Admin: Ads Management ---
-    function renderAdminAds() {
-      let ads = getData('ads', []);
-      let adsDiv = document.getElementById('adminAdsList');
-      adsDiv.innerHTML = '';
-      if (ads.length === 0) {
-        adsDiv.innerHTML = '<span style="color:#888;">No ads uploaded.</span>';
-        return;
-      }
-      ads.forEach((ad, idx) => {
-        let adHtml = '';
-        if (ad.type === 'image')
-          adHtml = `<img class="ad-media" src="${ad.data}" alt="Ad">`;
-        else
-          adHtml = `<video class="ad-media" src="${ad.data}" controls></video>`;
-        let delBtn = '';
-        if (ad.uploader === localStorage.getItem('loggedInUser'))
-          delBtn = `<button class="ad-delete-btn" onclick="deleteAd(${idx})">Delete</button>`;
-        adsDiv.innerHTML += `<div class="ad-item">${adHtml}<div style="font-size:0.82em;color:#888;">By: ${ad.uploader}</div>${delBtn}</div>`;
-      });
-    }
+        function editSubject(subjectId, name, total, attended) {
+            document.getElementById('subject-id').value = subjectId;
+            document.getElementById('subject-name').value = name;
+            document.getElementById('total-classes').value = total;
+            document.getElementById('attended-classes').value = attended;
+            document.getElementById('subject-modal-title').textContent = 'Edit Subject';
+            document.getElementById('subject-form-error').classList.add('hidden');
+            openModal('subject-modal');
+        }
 
-    // --- Sub Admin: Ads Management ---
-    function renderSubAdminAds() {
-      let ads = getData('ads', []);
-      let adsDiv = document.getElementById('subAdminAdsList');
-      adsDiv.innerHTML = '';
-      let user = localStorage.getItem('loggedInUser');
-      let myAds = ads.filter(ad => ad.uploader === user);
-      if (myAds.length === 0) {
-        adsDiv.innerHTML = '<span style="color:#888;">No ads uploaded.</span>';
-        return;
-      }
-      myAds.forEach((ad, idx) => {
-        let adHtml = '';
-        if (ad.type === 'image')
-          adHtml = `<img class="ad-media" src="${ad.data}" alt="Ad">`;
-        else
-          adHtml = `<video class="ad-media" src="${ad.data}" controls></video>`;
-        let globalIdx = getData('ads', []).findIndex(a => a === ad);
-        adsDiv.innerHTML += `<div class="ad-item">${adHtml}<div style="font-size:0.82em;color:#888;">By: ${ad.uploader}</div>
-          <button class="ad-delete-btn" onclick="deleteAd(${globalIdx})">Delete</button></div>`;
-      });
-    }
+        function listenForSubjects() {
+            const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
+            unsubscribeSubjects = onSnapshot(subjectsColRef, (snapshot) => {
+                const subjectListEl = document.getElementById('subject-list');
+                if (snapshot.empty) {
+                    subjectListEl.innerHTML = `<p class="text-gray-500 col-span-full text-center">No subjects added yet. Click 'Add New Subject' to begin.</p>`;
+                    updateOverallAttendance([]);
+                    return;
+                }
+                
+                const subjects = [];
+                let subjectsHtml = '';
+                snapshot.forEach(doc => {
+                    const subject = { id: doc.id, ...doc.data() };
+                    subjects.push(subject);
+                    const percentage = subject.total > 0 ? (subject.attended / subject.total) * 100 : 0;
+                    
+                    let statusColor = 'bg-green-500';
+                    if(percentage < 75 && percentage >= 65) statusColor = 'bg-yellow-500';
+                    if(percentage < 65) statusColor = 'bg-red-500';
+                    
+                    subjectsHtml += `
+                        <div class="bg-white p-5 rounded-lg shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800">${subject.name}</h3>
+                                <div class="flex gap-2">
+                                     <button onclick="window.editSubject('${subject.id}', '${subject.name}', ${subject.total}, ${subject.attended})" class="text-gray-400 hover:text-brand-blue"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                                     <button onclick="window.deleteSubject('${subject.id}')" class="text-gray-400 hover:text-danger"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-gray-500 text-sm mt-1">${subject.attended} / ${subject.total} classes attended</p>
+                            <div class="mt-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-600">Attendance</span>
+                                    <span class="text-sm font-bold ${percentage < 75 ? 'text-red-600' : 'text-green-600'}">${percentage.toFixed(1)}%</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar ${statusColor}" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                subjectListEl.innerHTML = subjectsHtml;
+                updateOverallAttendance(subjects);
+                lucide.createIcons();
+            });
+        }
 
-    // --- Delete Ad (only for uploader) ---
-    function deleteAd(idx) {
-      let ads = getData('ads', []);
-      let user = localStorage.getItem('loggedInUser');
-      let role = localStorage.getItem('userRole');
-      if ((ads[idx].uploader === user && (role === 'admin' || role === 'subadmin'))) {
-        ads.splice(idx, 1);
-        setData('ads', ads);
-        renderAdsBar();
-        if (role === 'admin') renderAdminAds();
-        else if (role === 'subadmin') renderSubAdminAds();
-      } else {
-        alert("You can only delete your own ads.");
-      }
-    }
+        function updateOverallAttendance(subjects) {
+            let totalClasses = 0;
+            let totalAttended = 0;
+            subjects.forEach(s => {
+                totalClasses += s.total;
+                totalAttended += s.attended;
+            });
+            
+            const overallPercentage = totalClasses > 0 ? (totalAttended / totalClasses) * 100 : 0;
+            document.getElementById('overall-percentage').textContent = `${overallPercentage.toFixed(1)}%`;
+            document.getElementById('overall-ratio').textContent = `${totalAttended} / ${totalClasses} classes`;
+            
+            const statusEl = document.getElementById('overall-status');
+            const bunkInfoEl = document.getElementById('bunk-info');
 
-    // --- Utility: Render on dashboard switch ---
-    window.renderAdminEnquiries = renderAdminEnquiries;
-    window.renderSubAdminEnquiries = renderSubAdminEnquiries;
+            if (totalClasses === 0) {
+                statusEl.textContent = "Not enough data";
+                statusEl.className = 'text-2xl font-bold mt-2 text-gray-500';
+                bunkInfoEl.textContent = 'Add subjects to see details.';
+                return;
+            }
 
-    // --- Expose functions for buttons ---
-    window.showAuthPage = showAuthPage;
-    window.showLogin = showLogin;
-    window.showSignup = showSignup;
-    window.showAdminLogin = showAdminLogin;
-    window.showForgotPin = showForgotPin;
-    window.signup = signup;
-    window.login = login;
-    window.adminLogin = adminLogin;
-    window.logout = logout;
-    window.addSubject = addSubject;
-    window.editSubject = editSubject;
-    window.saveSubject = saveSubject;
-    window.cancelEdit = cancelEdit;
-    window.deleteSubject = deleteSubject;
-    window.submitEnquiry = submitEnquiry;
-    window.addSubAdmin = addSubAdmin;
-    window.deleteEnquiry = deleteEnquiry;
-    window.uploadAd = uploadAd;
-    window.deleteAd = deleteAd;
-    window.resetPin = resetPin;
-  </script>
+            if (overallPercentage >= 75) {
+                statusEl.textContent = 'Safe Zone';
+                statusEl.className = 'text-2xl font-bold mt-2 text-green-600';
+                const maxBunk = Math.floor((totalAttended / 0.75) - totalClasses);
+                bunkInfoEl.textContent = `You can safely bunk ${maxBunk} more classes.`;
+            } else if (overallPercentage >= 65) {
+                statusEl.textContent = 'Warning';
+                statusEl.className = 'text-2xl font-bold mt-2 text-yellow-600';
+                 const needed = Math.ceil((0.75 * totalClasses - totalAttended) / 0.25);
+                bunkInfoEl.textContent = `Attend next ${needed} classes to reach 75%.`;
+            } else {
+                statusEl.textContent = 'Danger Zone';
+                statusEl.className = 'text-2xl font-bold mt-2 text-red-600';
+                const needed = Math.ceil((0.75 * totalClasses - totalAttended) / 0.25);
+                bunkInfoEl.textContent = `High risk of detention. Attend next ${needed} classes.`;
+            }
+        }
+        
+        // --- Student: Tab Switching ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'text-brand-blue', 'border-brand-blue'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300'));
+            
+            const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            activeBtn.classList.add('active', 'text-brand-blue', 'border-brand-blue');
+            activeBtn.classList.remove('text-gray-500', 'border-transparent');
+            
+            document.getElementById('attendance-tab').classList.add('hidden');
+            document.getElementById('timetable-tab').classList.add('hidden');
+            document.getElementById('enquiry-tab').classList.add('hidden');
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(button => {
+              if (button.classList.contains('active')) {
+                button.style.color = 'var(--brand-blue)';
+                button.style.borderColor = 'var(--brand-blue)';
+              } else {
+                button.style.color = '#6b7280'; 
+                button.style.borderColor = 'transparent';
+              }
+            });
+        }
+        
+        // --- Student: Timetable ---
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const periods = 8;
+        
+        function generateTimetableGrid() {
+            const table = document.getElementById('timetable-grid');
+            let thead = '<thead><tr><th class="p-2 border border-gray-300">Day/Period</th>';
+            for(let i=1; i<=periods; i++) {
+                thead += `<th class="p-2 border border-gray-300">${i}</th>`;
+            }
+            thead += '</tr></thead>';
+            
+            let tbody = '<tbody>';
+            days.forEach(day => {
+                tbody += `<tr><td class="p-2 border border-gray-300 font-semibold">${day}</td>`;
+                for(let i=1; i<=periods; i++) {
+                    tbody += `<td class="p-1 border border-gray-300"><input type="text" data-day="${day}" data-period="${i}" class="w-24 text-center border-none focus:ring-2 focus:ring-brand-blue rounded"></td>`;
+                }
+                tbody += '</tr>';
+            });
+            tbody += '</tbody>';
+            table.innerHTML = thead + tbody;
+        }
+
+        document.getElementById('save-timetable-btn').addEventListener('click', async () => {
+            const timetableData = {};
+            document.querySelectorAll('#timetable-grid input').forEach(input => {
+                const day = input.dataset.day;
+                const period = input.dataset.period;
+                if (!timetableData[day]) timetableData[day] = {};
+                timetableData[day][period] = input.value.trim();
+            });
+            
+            try {
+                const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
+                await setDoc(timetableDocRef, { schedule: timetableData });
+                showToast('Timetable saved successfully!', 'success');
+            } catch (error) {
+                console.error("Error saving timetable: ", error);
+                showToast('Failed to save timetable.', 'error');
+            }
+        });
+
+        async function loadTimetable() {
+            try {
+                const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
+                const docSnap = await getDoc(timetableDocRef);
+                if (docSnap.exists()) {
+                    const timetableData = docSnap.data().schedule;
+                    document.querySelectorAll('#timetable-grid input').forEach(input => {
+                        const day = input.dataset.day;
+                        const period = input.dataset.period;
+                        if (timetableData[day] && timetableData[day][period]) {
+                            input.value = timetableData[day][period];
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading timetable: ", error);
+            }
+        }
+
+        // --- Student: Mark Attendance ---
+        document.getElementById('open-mark-attendance-modal-btn').addEventListener('click', async () => {
+            const listEl = document.getElementById('daily-classes-list');
+            listEl.innerHTML = '<div class="loader mx-auto"></div>';
+            openModal('mark-attendance-modal');
+
+            const todayIndex = (new Date().getDay() + 6) % 7; // Monday is 0
+            if (todayIndex > 5) { // Sunday
+                listEl.innerHTML = '<p class="text-gray-600 text-center">It\'s Sunday! No classes today.</p>';
+                return;
+            }
+            const today = days[todayIndex];
+
+            // Fetch timetable
+            const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
+            const timetableSnap = await getDoc(timetableDocRef);
+            
+            // Fetch subjects
+            const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
+            const subjectsSnap = await getDocs(subjectsColRef);
+            const subjectsMap = new Map();
+            subjectsSnap.forEach(doc => subjectsMap.set(doc.data().name, {id: doc.id, ...doc.data()}));
+            
+            if (!timetableSnap.exists() || !timetableSnap.data().schedule[today]) {
+                 listEl.innerHTML = '<p class="text-gray-600 text-center">No classes scheduled for today in your timetable.</p>';
+                 return;
+            }
+            
+            const todaySchedule = timetableSnap.data().schedule[today];
+            const classesForToday = Object.values(todaySchedule).filter(name => name.trim() !== '');
+            
+            if (classesForToday.length === 0) {
+                 listEl.innerHTML = '<p class="text-gray-600 text-center">No classes scheduled for today in your timetable.</p>';
+                 return;
+            }
+            
+            let html = '<div class="space-y-4">';
+            classesForToday.forEach(subjectName => {
+                const subjectData = subjectsMap.get(subjectName);
+                if (subjectData) {
+                    html += `
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <span class="font-semibold">${subjectName}</span>
+                            <div class="flex gap-2">
+                                <button onclick="markAttendance('${subjectData.id}', true)" class="btn bg-green-100 text-green-800 hover:bg-green-200 text-sm py-1 px-3">Present</button>
+                                <button onclick="markAttendance('${subjectData.id}', false)" class="btn bg-red-100 text-red-800 hover:bg-red-200 text-sm py-1 px-3">Absent</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                     html += `<div class="bg-yellow-50 p-3 rounded-lg">Subject "${subjectName}" from timetable not found in your subjects list.</div>`;
+                }
+            });
+            html += '</div>';
+            listEl.innerHTML = html;
+        });
+        
+        async function markAttendance(subjectId, wasPresent) {
+             const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
+             try {
+                const subjectSnap = await getDoc(subjectDocRef);
+                if (!subjectSnap.exists()) {
+                    showToast('Subject not found.', 'error');
+                    return;
+                }
+                const subject = subjectSnap.data();
+                const newTotal = subject.total + 1;
+                const newAttended = wasPresent ? subject.attended + 1 : subject.attended;
+
+                await updateDoc(subjectDocRef, {
+                    total: newTotal,
+                    attended: newAttended
+                });
+                
+                showToast(`Marked ${wasPresent ? 'Present' : 'Absent'} for ${subject.name}`, 'success');
+                // The onSnapshot listener will handle UI update automatically
+             } catch(error) {
+                console.error("Error marking attendance: ", error);
+                showToast('Failed to mark attendance.', 'error');
+             }
+        }
+        
+        // --- Student: Enquiry Form ---
+        document.getElementById('enquiry-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const enquiryData = {
+                name: document.getElementById('enq-name').value,
+                college: document.getElementById('enq-college').value,
+                email: document.getElementById('enq-email').value,
+                description: document.getElementById('enq-desc').value,
+                userId: currentUser?.uid || 'anonymous',
+                submittedAt: serverTimestamp()
+            };
+            
+            try {
+                const enquiriesColRef = collection(db, `artifacts/${appId}/public/data/enquiries`);
+                await addDoc(enquiriesColRef, enquiryData);
+                showToast('Enquiry submitted successfully!', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error("Error submitting enquiry:", error);
+                showToast('Failed to submit enquiry.', 'error');
+            }
+        });
+
+        // --- Admin/Sub-Admin ---
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-brand-blue', 'border-brand-blue');
+                btn.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                if (btn.classList.contains('active')) {
+                    btn.style.color = 'var(--brand-blue)';
+                    btn.style.borderColor = 'var(--brand-blue)';
+                } else {
+                    btn.style.color = '#6b7280';
+                    btn.style.borderColor = 'transparent';
+                }
+            });
+            const activeBtn = document.querySelector(`.admin-tab-btn[data-tab="${tabName}"]`);
+            activeBtn.classList.add('active', 'text-brand-blue', 'border-brand-blue');
+            activeBtn.classList.remove('text-gray-500', 'border-transparent');
+             activeBtn.style.color = 'var(--brand-blue)';
+             activeBtn.style.borderColor = 'var(--brand-blue)';
+            
+            document.getElementById('enquiries-admin-tab').classList.add('hidden');
+            document.getElementById('ads-admin-tab').classList.add('hidden');
+            document.getElementById('subadmins-admin-tab').classList.add('hidden');
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+        }
+
+        // Enquiries
+        function listenForEnquiries() {
+            const enquiriesColRef = collection(db, `artifacts/${appId}/public/data/enquiries`);
+            unsubscribeEnquiries = onSnapshot(enquiriesColRef, (snapshot) => {
+                const listEl = document.getElementById('admin-enquiry-list');
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<p class="p-4 text-gray-500 text-center">No enquiries yet.</p>';
+                    return;
+                }
+                
+                let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">College</th><th class="px-6 py-3">Description</th><th class="px-6 py-3">Submitted</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
+                snapshot.forEach(doc => {
+                    const enq = { id: doc.id, ...doc.data() };
+                    const date = enq.submittedAt ? enq.submittedAt.toDate().toLocaleString() : 'N/A';
+                    html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${enq.name}</td><td class="px-6 py-4">${enq.college}</td><td class="px-6 py-4">${enq.description}</td><td class="px-6 py-4">${date}</td><td class="px-6 py-4"><button onclick="window.deleteEnquiry('${enq.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
+                });
+                html += '</tbody></table>';
+                listEl.innerHTML = html;
+            });
+        }
+        
+        async function deleteEnquiry(id) {
+            if (!confirm('Delete this enquiry permanently?')) return;
+            const docRef = doc(db, `artifacts/${appId}/public/data/enquiries`, id);
+            try {
+                await deleteDoc(docRef);
+                showToast('Enquiry deleted.');
+            } catch (error) {
+                showToast('Failed to delete enquiry.', 'error');
+                console.error(error);
+            }
+        }
+        
+        // Sub-Admins
+        document.getElementById('add-subadmin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mobile = document.getElementById('subadmin-mobile').value;
+            const pin = document.getElementById('subadmin-pin').value;
+            
+            const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
+            const q = query(subAdminsColRef, where("mobile", "==", mobile));
+            const existing = await getDocs(q);
+
+            if (!existing.empty) {
+                showToast('A sub-admin with this mobile already exists.', 'error');
+                return;
+            }
+
+            try {
+                await addDoc(subAdminsColRef, { mobile, pin, createdAt: serverTimestamp() });
+                showToast('Sub-Admin added successfully!', 'success');
+                e.target.reset();
+            } catch(error) {
+                showToast('Failed to add Sub-Admin.', 'error');
+                console.error(error);
+            }
+        });
+        
+        function listenForSubAdmins() {
+            const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
+            unsubscribeSubAdmins = onSnapshot(subAdminsColRef, (snapshot) => {
+                const listEl = document.getElementById('subadmin-list');
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<p class="p-4 text-gray-500 text-center">No Sub-Admins added.</p>';
+                    return;
+                }
+                
+                let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Mobile Number</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
+                snapshot.forEach(doc => {
+                    const sa = { id: doc.id, ...doc.data() };
+                    html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${sa.mobile}</td><td class="px-6 py-4"><button onclick="window.deleteSubAdmin('${sa.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
+                });
+                html += '</tbody></table>';
+                listEl.innerHTML = html;
+            });
+        }
+        
+        async function deleteSubAdmin(id) {
+            if (!confirm('Delete this Sub-Admin permanently?')) return;
+            const docRef = doc(db, `artifacts/${appId}/public/data/subAdmins`, id);
+            try {
+                await deleteDoc(docRef);
+                showToast('Sub-Admin deleted.');
+            } catch (error) {
+                showToast('Failed to delete Sub-Admin.', 'error');
+                console.error(error);
+            }
+        }
+        
+        // Ads Management
+        document.getElementById('ad-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('ad-file');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            if (file.size > 1024 * 1024) { // 1MB limit
+                showToast('File is too large. Max size is 1MB.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const adData = {
+                    dataUrl: event.target.result,
+                    type: file.type.startsWith('image/') ? 'image' : 'video',
+                    uploaderId: (userRole === 'admin') ? 'admin' : currentUser.uid,
+                    uploaderRole: userRole,
+                    uploadedAt: serverTimestamp()
+                };
+                try {
+                    const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
+                    await addDoc(adsColRef, adData);
+                    showToast('Ad uploaded successfully!', 'success');
+                    fileInput.value = '';
+                } catch (error) {
+                    console.error("Error uploading ad:", error);
+                    showToast('Failed to upload ad.', 'error');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        function listenForAds() {
+            const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
+            unsubscribeAds = onSnapshot(adsColRef, (snapshot) => {
+                const adsBarInner = document.getElementById('ads-bar-inner');
+                const adminAdsList = document.getElementById('admin-ads-list');
+                
+                adsBarInner.innerHTML = '';
+                adminAdsList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    adsBarInner.innerHTML = `<p class="text-gray-500">No advertisements to show.</p>`;
+                    adminAdsList.innerHTML = `<p class="text-gray-500 text-center col-span-full">No ads uploaded yet.</p>`;
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const ad = { id: doc.id, ...doc.data() };
+                    const mediaHtml = ad.type === 'image'
+                        ? `<img src="${ad.dataUrl}" class="w-full h-full object-cover rounded-md">`
+                        : `<video src="${ad.dataUrl}" class="w-full h-full object-cover rounded-md" controls></video>`;
+                    
+                    // For floating ads bar (all users)
+                    adsBarInner.innerHTML += `<div class="flex-shrink-0 w-28 h-36 bg-gray-200 rounded-md shadow-md">${mediaHtml}</div>`;
+                    
+                    // For admin management list
+                    const canDelete = (userRole === 'admin') || (userRole === 'subadmin' && ad.uploaderId === currentUser.uid);
+                    const deleteBtnHtml = canDelete ? `<button onclick="window.deleteAd('${ad.id}')" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '';
+                    adminAdsList.innerHTML += `
+                        <div class="relative w-full h-48 bg-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            ${mediaHtml}
+                            ${deleteBtnHtml}
+                        </div>
+                    `;
+                });
+                lucide.createIcons();
+            });
+        }
+
+        async function deleteAd(id) {
+            if (!confirm('Delete this ad permanently?')) return;
+            const docRef = doc(db, `artifacts/${appId}/public/data/ads`, id);
+            try {
+                await deleteDoc(docRef);
+                showToast('Ad deleted.');
+            } catch (error) {
+                showToast('Failed to delete ad.', 'error');
+                console.error(error);
+            }
+        }
+        
+
+        // --- Global Functions for inline onclick ---
+        window.switchTab = switchTab;
+        window.switchAdminTab = switchAdminTab;
+        window.editSubject = editSubject;
+        window.deleteSubject = deleteSubject;
+        window.closeModal = closeModal;
+        window.deleteEnquiry = deleteEnquiry;
+        window.deleteSubAdmin = deleteSubAdmin;
+        window.deleteAd = deleteAd;
+        window.markAttendance = markAttendance;
+
+        // --- App Start ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppAndAuth();
+            generateTimetableGrid();
+            lucide.createIcons();
+            
+            // Default student tab style
+            const defaultTab = document.querySelector('.tab-btn[data-tab="attendance"]');
+            defaultTab.style.color = 'var(--brand-blue)';
+            defaultTab.style.borderColor = 'var(--brand-blue)';
+        });
+    </script>
 </body>
 </html>
