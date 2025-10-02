@@ -169,21 +169,22 @@
                 
                 <form id="auth-form">
                     <div class="mb-4">
-                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" id="auth-email" class="form-input" placeholder="Enter your email" required>
+                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                        <input type="tel" id="auth-email" class="form-input" pattern="[0-9]{10}" maxlength="10" placeholder="Enter your 10-digit mobile" required>
                     </div>
                     <div class="mb-6">
-    <label for="auth-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-    <input type="password" id="auth-password" class="form-input" placeholder="Enter your password" required>
-  </div>
+                        <label for="auth-pin" class="block text-sm font-medium text-gray-700 mb-1">4-Digit PIN</label>
+                        <input type="password" id="auth-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" placeholder="Enter your 4-digit PIN" required>
+                    </div>
                     
                     <div id="auth-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
 
-  <div class="flex items-center gap-4">
-    <button type="button" id="login-btn" class="btn btn-primary w-full">Login</button>
-    <button type="button" id="signup-btn" class="btn btn-outline w-full">Sign Up</button>
-  </div>
-</form>
+                    <div class="flex items-center gap-4">
+                        <button type="button" id="login-btn" class="btn btn-primary w-full">Login</button>
+                        <button type="button" id="signup-btn" class="btn btn-outline w-full">Sign Up</button>
+                    </div>
+                </form>
+
                  <div class="text-center mt-6">
                     <button id="admin-login-prompt" class="text-sm text-gray-600 hover:text-brand-blue bg-transparent border-none p-0 cursor-pointer focus:outline-none focus:underline">Login as Admin / Sub-Admin</button>
                 </div>
@@ -326,10 +327,20 @@
                             <div class="bg-white p-6 rounded-lg shadow-sm">
                                 <h2 class="text-xl font-bold text-gray-800 mb-4">Upload Ad</h2>
                                 <form id="ad-form">
-                                    <label for="ad-file" class="block text-sm font-medium text-gray-700 mb-2">Image or Video (4:5 ratio)</label>
-                                    <input type="file" id="ad-file" accept="image/*,video/*" class="form-input" required>
-                                    <p class="text-xs text-gray-500 mt-1">Max file size: 1MB.</p>
-                                    <button type="submit" class="btn btn-primary w-full mt-4">Upload</button>
+                                    <!-- FIX: Added caption input -->
+                                    <div class="mb-4">
+                                        <label for="ad-caption" class="block text-sm font-medium text-gray-700 mb-1">Ad Caption (Optional)</label>
+                                        <input type="text" id="ad-caption" class="form-input" placeholder="e.g., 'Special Offer!'">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="ad-file" class="block text-sm font-medium text-gray-700 mb-1">Image or Video (4:5 ratio)</label>
+                                        <input type="file" id="ad-file" accept="image/*,video/*" class="form-input" required>
+                                        <p class="text-xs text-gray-500 mt-1">Max file size: 1MB.</p>
+                                    </div>
+                                    <button type="submit" id="ad-upload-btn" class="btn btn-primary w-full">
+                                        <span id="ad-upload-text">Upload</span>
+                                        <div id="ad-upload-loader" class="loader w-5 h-5 border-2 border-white border-t-transparent hidden"></div>
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -490,22 +501,32 @@
             getDocs,
             serverTimestamp
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // FIX: Import Firebase Storage modules
+        import {
+            getStorage,
+            ref,
+            uploadBytes,
+            getDownloadURL,
+            deleteObject
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
 
         // --- App State ---
-        let auth, db;
+        let auth, db, storage; // FIX: Added storage
         let currentUser = null;
         let userRole = 'student';
         let unsubscribeSubjects = null;
         let unsubscribeEnquiries = null;
-// ... existing code ... -->
+        let unsubscribeAds = null; // FIX: Initialized variable
         let unsubscribeSubAdmins = null;
 
         // --- Config ---
+        // A default config is provided for development, but it will be replaced by the environment's config.
         const userProvidedConfig = {
             apiKey: "AIzaSyDjh0fSIdc39G2htzp205C1OheJ8t8dnf4",
             authDomain: "asr-attendance-56791.firebaseapp.com",
             projectId: "asr-attendance-56791",
-            storageBucket: "asr-attendance-56791.firebasestorage.app",
+            storageBucket: "asr-attendance-56791.appspot.com", // FIX: Corrected storage bucket domain
             messagingSenderId: "349816783965",
             appId: "1:349816783965:web:f6a1a57e3eddd966f1f9b4",
             measurementId: "G-1WBWNRX9QB"
@@ -513,8 +534,8 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(userProvidedConfig));
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        const ADMIN_MOBILE = 'asr082239@gmail.com';
-        const ADMIN_PIN = '021003';
+        const ADMIN_MOBILE = '9603230138';
+        const ADMIN_PIN = '0210';
         
         // --- UI Elements ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -564,8 +585,10 @@
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
+                storage = getStorage(app); // FIX: Initialize Storage
                 setupAuthListener();
-            } catch (error) {
+            } catch (error)
+            {
                 console.error("Firebase initialization failed:", error);
                 loadingScreen.innerHTML = `<p class="text-red-500">Error: Could not connect to the backend.</p>`;
             }
@@ -574,9 +597,11 @@
         // --- Auth Listener ---
         function setupAuthListener() {
             onAuthStateChanged(auth, async (user) => {
+                // If user exists, fetch their role and setup the dashboard.
                 if (user) {
                     currentUser = user;
                     await fetchUserRoleAndSetupDashboard(user.uid);
+                // Otherwise, show the authentication page.
                 } else {
                     currentUser = null;
                     showPage('auth');
@@ -607,6 +632,8 @@
             } else {
                 // This might be a new user, default to student
                 userRole = 'student';
+                 // The signup function will set the name, but we can set a default here
+                document.getElementById('user-display-name').textContent = 'New User';
                 setupDashboard('student');
             }
         }
@@ -629,7 +656,7 @@
             studentDashboard.classList.add('hidden');
             adminDashboard.classList.add('hidden');
             
-            // Detach previous listeners
+            // Detach previous listeners to prevent memory leaks
             if(unsubscribeSubjects) unsubscribeSubjects();
             if(unsubscribeEnquiries) unsubscribeEnquiries();
             if(unsubscribeAds) unsubscribeAds();
@@ -641,6 +668,7 @@
                 studentDashboard.classList.remove('hidden');
                 listenForSubjects();
                 loadTimetable();
+                 switchTab('attendance'); // Default tab
             } else {
                 adminDashboard.classList.remove('hidden');
                 document.getElementById('subadmin-mgmt-tab-btn').style.display = (role === 'admin') ? 'flex' : 'none';
@@ -653,6 +681,7 @@
 
         // --- Authentication Logic ---
         async function handleSignup(mobile, pin) {
+            // Firebase auth uses email format, so we create a dummy email.
             const email = `${mobile}@attendance.app`;
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, pin);
@@ -681,6 +710,7 @@
             const email = `${mobile}@attendance.app`;
             try {
                 await signInWithEmailAndPassword(auth, email, pin);
+                 hideAuthError();
             } catch (error) {
                 showAuthError("Invalid mobile number or PIN.");
                 console.error("Login error:", error);
@@ -689,9 +719,8 @@
         
         async function handleAdminLogin(mobile, pin) {
             hideAuthError('admin-login');
+            // Main Admin Login
             if (mobile === ADMIN_MOBILE && pin === ADMIN_PIN) {
-                // This is the main admin. For this demo, we can't create a separate auth user.
-                // In a real app, the admin would have a proper account. We'll simulate by setting state.
                 userRole = 'admin';
                 document.getElementById('user-display-name').textContent = 'Main Admin';
                 document.getElementById('user-id-display').textContent = 'admin';
@@ -706,7 +735,7 @@
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                showAuthError("No account found for this mobile number.", 'admin-login');
+                showAuthError("No admin account found for this mobile.", 'admin-login');
                 return;
             }
             
@@ -726,11 +755,12 @@
         }
 
         async function handleLogout() {
-            // For simulated admin/sub-admin, just reload
+            // For simulated admin/sub-admin, we just reload to go back to the auth page.
             if (userRole === 'admin' || userRole === 'subadmin') {
                 window.location.reload();
                 return;
             }
+            // For regular users, sign out properly.
             try {
                 await signOut(auth);
             } catch (error) {
@@ -801,13 +831,11 @@
             const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
 
             try {
-                if (subjectId) {
-                    // Update existing
+                if (subjectId) { // Update existing subject
                     const subjectDocRef = doc(subjectsColRef, subjectId);
                     await updateDoc(subjectDocRef, subjectData);
                     showToast('Subject updated successfully!');
-                } else {
-                    // Add new
+                } else { // Add new subject
                     await addDoc(subjectsColRef, subjectData);
                     showToast('Subject added successfully!');
                 }
@@ -819,14 +847,15 @@
         });
         
         async function deleteSubject(subjectId) {
-            if (!confirm('Are you sure you want to delete this subject?')) return;
-            try {
-                const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
-                await deleteDoc(subjectDocRef);
-                showToast('Subject deleted.');
-            } catch (error) {
-                console.error("Error deleting subject:", error);
-                showToast('Failed to delete subject.', 'error');
+             if (window.confirm('Are you sure you want to delete this subject?')) {
+                try {
+                    const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
+                    await deleteDoc(subjectDocRef);
+                    showToast('Subject deleted.');
+                } catch (error) {
+                    console.error("Error deleting subject:", error);
+                    showToast('Failed to delete subject.', 'error');
+                }
             }
         }
 
@@ -916,21 +945,16 @@
                 statusEl.className = 'text-2xl font-bold mt-2 text-green-600';
                 const maxBunk = Math.floor((totalAttended / 0.75) - totalClasses);
                 bunkInfoEl.textContent = `You can safely bunk ${maxBunk} more classes.`;
-            } else if (overallPercentage >= 65) {
-                statusEl.textContent = 'Warning';
-                statusEl.className = 'text-2xl font-bold mt-2 text-yellow-600';
-                 const needed = Math.ceil((0.75 * totalClasses - totalAttended) / 0.25);
-                bunkInfoEl.textContent = `Attend next ${needed} classes to reach 75%.`;
             } else {
                 statusEl.textContent = 'Danger Zone';
                 statusEl.className = 'text-2xl font-bold mt-2 text-red-600';
                 const needed = Math.ceil((0.75 * totalClasses - totalAttended) / 0.25);
-                bunkInfoEl.textContent = `High risk of detention. Attend next ${needed} classes.`;
+                bunkInfoEl.textContent = `Attend the next ${needed} classes to reach 75%.`;
             }
         }
         
         // --- Student: Tab Switching ---
-        function switchTab(tabName) {
+        window.switchTab = (tabName) => {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'text-brand-blue', 'border-brand-blue'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300'));
             
@@ -1053,7 +1077,8 @@
             }
             
             let html = '<div class="space-y-4">';
-            classesForToday.forEach(subjectName => {
+            const uniqueClasses = [...new Set(classesForToday)]; // Handle duplicate entries in timetable
+            uniqueClasses.forEach(subjectName => {
                 const subjectData = subjectsMap.get(subjectName);
                 if (subjectData) {
                     html += `
@@ -1066,7 +1091,7 @@
                         </div>
                     `;
                 } else {
-                     html += `<div class="bg-yellow-50 p-3 rounded-lg">Subject "${subjectName}" from timetable not found in your subjects list.</div>`;
+                     html += `<div class="bg-yellow-50 p-3 rounded-lg text-sm">Subject <b>"${subjectName}"</b> from timetable not found in your subjects list. Please add it first.</div>`;
                 }
             });
             html += '</div>';
@@ -1091,7 +1116,6 @@
                 });
                 
                 showToast(`Marked ${wasPresent ? 'Present' : 'Absent'} for ${subject.name}`, 'success');
-                // The onSnapshot listener will handle UI update automatically
              } catch(error) {
                 console.error("Error marking attendance: ", error);
                 showToast('Failed to mark attendance.', 'error');
@@ -1122,17 +1146,12 @@
         });
 
         // --- Admin/Sub-Admin ---
-        function switchAdminTab(tabName) {
+        window.switchAdminTab = (tabName) => {
             document.querySelectorAll('.admin-tab-btn').forEach(btn => {
                 btn.classList.remove('active', 'text-brand-blue', 'border-brand-blue');
                 btn.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
-                if (btn.classList.contains('active')) {
-                    btn.style.color = 'var(--brand-blue)';
-                    btn.style.borderColor = 'var(--brand-blue)';
-                } else {
-                    btn.style.color = '#6b7280';
-                    btn.style.borderColor = 'transparent';
-                }
+                 btn.style.color = '#6b7280';
+                 btn.style.borderColor = 'transparent';
             });
             const activeBtn = document.querySelector(`.admin-tab-btn[data-tab="${tabName}"]`);
             activeBtn.classList.add('active', 'text-brand-blue', 'border-brand-blue');
@@ -1157,8 +1176,12 @@
                 }
                 
                 let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">College</th><th class="px-6 py-3">Description</th><th class="px-6 py-3">Submitted</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
-                snapshot.forEach(doc => {
-                    const enq = { id: doc.id, ...doc.data() };
+                const enquiries = [];
+                snapshot.forEach(doc => enquiries.push({ id: doc.id, ...doc.data() }));
+                // Sort by date, newest first
+                enquiries.sort((a, b) => (b.submittedAt?.seconds || 0) - (a.submittedAt?.seconds || 0));
+
+                enquiries.forEach(enq => {
                     const date = enq.submittedAt ? enq.submittedAt.toDate().toLocaleString() : 'N/A';
                     html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${enq.name}</td><td class="px-6 py-4">${enq.college}</td><td class="px-6 py-4">${enq.description}</td><td class="px-6 py-4">${date}</td><td class="px-6 py-4"><button onclick="window.deleteEnquiry('${enq.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
                 });
@@ -1168,14 +1191,15 @@
         }
         
         async function deleteEnquiry(id) {
-            if (!confirm('Delete this enquiry permanently?')) return;
-            const docRef = doc(db, `artifacts/${appId}/public/data/enquiries`, id);
-            try {
-                await deleteDoc(docRef);
-                showToast('Enquiry deleted.');
-            } catch (error) {
-                showToast('Failed to delete enquiry.', 'error');
-                console.error(error);
+            if (window.confirm('Delete this enquiry permanently?')) {
+                const docRef = doc(db, `artifacts/${appId}/public/data/enquiries`, id);
+                try {
+                    await deleteDoc(docRef);
+                    showToast('Enquiry deleted.');
+                } catch (error) {
+                    showToast('Failed to delete enquiry.', 'error');
+                    console.error(error);
+                }
             }
         }
         
@@ -1224,48 +1248,69 @@
         }
         
         async function deleteSubAdmin(id) {
-            if (!confirm('Delete this Sub-Admin permanently?')) return;
-            const docRef = doc(db, `artifacts/${appId}/public/data/subAdmins`, id);
-            try {
-                await deleteDoc(docRef);
-                showToast('Sub-Admin deleted.');
-            } catch (error) {
-                showToast('Failed to delete Sub-Admin.', 'error');
-                console.error(error);
+             if (window.confirm('Delete this Sub-Admin permanently?')) {
+                const docRef = doc(db, `artifacts/${appId}/public/data/subAdmins`, id);
+                try {
+                    await deleteDoc(docRef);
+                    showToast('Sub-Admin deleted.');
+                } catch (error) {
+                    showToast('Failed to delete Sub-Admin.', 'error');
+                    console.error(error);
+                }
             }
         }
-        // Ads management
-document.getElementById('ad-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fileInput = document.getElementById('ad-file');
-    const file = fileInput.files[0];
-    const caption = document.getElementById('ad-caption').value;
+        
+        // --- Ads Management ---
+        document.getElementById('ad-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('ad-file');
+            const file = fileInput.files[0];
+            const caption = document.getElementById('ad-caption').value;
+            const uploadBtn = document.getElementById('ad-upload-btn');
+            const uploadText = document.getElementById('ad-upload-text');
+            const uploadLoader = document.getElementById('ad-upload-loader');
 
-    if (!file) {
-        showToast('Please select a file.', 'error');
-        return;
-    }
+            if (!file) {
+                showToast('Please select a file.', 'error');
+                return;
+            }
+            if (file.size > 1024 * 1024) { // 1MB limit
+                showToast('File size cannot exceed 1MB.', 'error');
+                return;
+            }
 
-    try {
-        const storage = getStorage();
-        const storageRef = ref(storage, `artifacts/${appId}/ads/${Date.now()}-${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+            // Show loader
+            uploadText.classList.add('hidden');
+            uploadLoader.classList.remove('hidden');
+            uploadBtn.disabled = true;
 
-        const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
-        await addDoc(adsColRef, {
-            url,
-            caption,
-            createdAt: serverTimestamp()
+            try {
+                // FIX: Use Firebase storage instead of base64
+                const storageRef = ref(storage, `artifacts/${appId}/ads/${Date.now()}-${file.name}`);
+                await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(storageRef);
+
+                const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
+                await addDoc(adsColRef, {
+                    url,
+                    caption,
+                    type: file.type.startsWith('video') ? 'video' : 'image', // Store file type
+                    uploaderId: currentUser?.uid,
+                    createdAt: serverTimestamp()
+                });
+
+                showToast('Ad uploaded successfully!', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error("Ad upload error:", error);
+                showToast('Failed to upload ad.', 'error');
+            } finally {
+                // Hide loader
+                uploadText.classList.remove('hidden');
+                uploadLoader.classList.add('hidden');
+                uploadBtn.disabled = false;
+            }
         });
-
-        showToast('Ad uploaded successfully!', 'success');
-        e.target.reset();
-    } catch (error) {
-        console.error("Ad upload error:", error);
-        showToast('Failed to upload ad.', 'error');
-    }
-});
         
         function listenForAds() {
             const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
@@ -1274,53 +1319,70 @@ document.getElementById('ad-form').addEventListener('submit', async (e) => {
                 const adminAdsList = document.getElementById('admin-ads-list');
                 
                 adsBarInner.innerHTML = '';
-                adminAdsList.innerHTML = '';
+                if(adminAdsList) adminAdsList.innerHTML = '';
                 
                 if (snapshot.empty) {
-                    adsBarInner.innerHTML = `<p class="text-gray-500">No advertisements to show.</p>`;
-                    adminAdsList.innerHTML = `<p class="text-gray-500 text-center col-span-full">No ads uploaded yet.</p>`;
+                    adsBarInner.innerHTML = `<p class="text-gray-500 text-sm">Advertisements will be shown here.</p>`;
+                    if(adminAdsList) adminAdsList.innerHTML = `<p class="text-gray-500 text-center col-span-full">No ads uploaded yet.</p>`;
                     return;
                 }
                 
-                snapshot.forEach(doc => {
-                    const ad = { id: doc.id, ...doc.data() };
-                    const mediaHtml = ad.type === 'image'
-                        ? `<img src="${ad.dataUrl}" class="w-full h-full object-cover rounded-md">`
-                        : `<video src="${ad.dataUrl}" class="w-full h-full object-cover rounded-md" controls></video>`;
+                const ads = [];
+                snapshot.forEach(doc => ads.push({ id: doc.id, ...doc.data() }));
+                ads.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                ads.forEach(ad => {
+                    // FIX: Use ad.url and check ad.type
+                    const mediaHtml = ad.type === 'video'
+                        ? `<video src="${ad.url}" class="w-full h-full object-cover" controls muted loop playsinline></video>`
+                        : `<img src="${ad.url}" alt="${ad.caption || 'Advertisement'}" class="w-full h-full object-cover">`;
                     
                     // For floating ads bar (all users)
-                    adsBarInner.innerHTML += `<div class="flex-shrink-0 w-28 h-36 bg-gray-200 rounded-md shadow-md">${mediaHtml}</div>`;
+                    adsBarInner.innerHTML += `<div class="relative group flex-shrink-0 w-28 h-36 bg-gray-200 rounded-md shadow-md overflow-hidden">${mediaHtml}
+                        ${ad.caption ? `<div class="absolute bottom-0 left-0 w-full bg-black/50 text-white text-xs p-1 text-center truncate">${ad.caption}</div>` : ''}
+                    </div>`;
                     
-                    // For admin management list
-                    const canDelete = (userRole === 'admin') || (userRole === 'subadmin' && ad.uploaderId === currentUser.uid);
-                    const deleteBtnHtml = canDelete ? `<button onclick="window.deleteAd('${ad.id}')" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '';
-                    adminAdsList.innerHTML += `
-                        <div class="relative w-full h-48 bg-gray-200 rounded-lg shadow-sm overflow-hidden">
-                            ${mediaHtml}
-                            ${deleteBtnHtml}
-                        </div>
-                    `;
+                    // For admin management list (if on admin page)
+                    if(adminAdsList){
+                        const canDelete = (userRole === 'admin') || (userRole === 'subadmin' && ad.uploaderId === currentUser.uid);
+                        const deleteBtnHtml = canDelete ? `<button onclick="window.deleteAd('${ad.id}', '${ad.url}')" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 z-10"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '';
+                        adminAdsList.innerHTML += `
+                            <div class="relative w-full h-48 bg-gray-200 rounded-lg shadow-sm overflow-hidden group">
+                                ${mediaHtml}
+                                ${ad.caption ? `<div class="absolute bottom-0 left-0 w-full bg-black/50 text-white text-sm p-1 text-center truncate">${ad.caption}</div>` : ''}
+                                ${deleteBtnHtml}
+                            </div>
+                        `;
+                    }
                 });
                 lucide.createIcons();
             });
         }
 
-        async function deleteAd(id) {
-            if (!confirm('Delete this ad permanently?')) return;
-            const docRef = doc(db, `artifacts/${appId}/public/data/ads`, id);
-            try {
-                await deleteDoc(docRef);
-                showToast('Ad deleted.');
-            } catch (error) {
-                showToast('Failed to delete ad.', 'error');
-                console.error(error);
+        async function deleteAd(id, url) {
+             if (window.confirm('Delete this ad permanently?')) {
+                const docRef = doc(db, `artifacts/${appId}/public/data/ads`, id);
+                // FIX: Also delete file from storage
+                const storageRef = ref(storage, url);
+                try {
+                    await deleteObject(storageRef);
+                    await deleteDoc(docRef);
+                    showToast('Ad deleted successfully.');
+                } catch (error) {
+                    // Handle case where file might already be deleted from storage but doc remains
+                    if (error.code === 'storage/object-not-found') {
+                        await deleteDoc(docRef); // Still delete the doc
+                        showToast('Ad record deleted.');
+                    } else {
+                        showToast('Failed to delete ad.', 'error');
+                        console.error("Error deleting ad: ", error);
+                    }
+                }
             }
         }
         
 
         // --- Global Functions for inline onclick ---
-        window.switchTab = switchTab;
-        window.switchAdminTab = switchAdminTab;
         window.editSubject = editSubject;
         window.deleteSubject = deleteSubject;
         window.closeModal = closeModal;
@@ -1343,5 +1405,3 @@ document.getElementById('ad-form').addEventListener('submit', async (e) => {
     </script>
 </body>
 </html>
-
-
