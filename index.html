@@ -169,12 +169,12 @@
                 
                 <form id="auth-form">
                     <div class="mb-4">
-                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                        <input type="tel" id="auth-email" class="form-input" pattern="[0-9]{10}" maxlength="10" placeholder="Enter your 10-digit mobile" required>
+                        <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="auth-email" class="form-input" placeholder="Enter your email" required>
                     </div>
                     <div class="mb-6">
-                        <label for="auth-pin" class="block text-sm font-medium text-gray-700 mb-1">4-Digit PIN</label>
-                        <input type="password" id="auth-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" placeholder="Enter your 4-digit PIN" required>
+                        <label for="auth-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="auth-password" class="form-input" placeholder="Enter your password" required>
                     </div>
                     
                     <div id="auth-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
@@ -327,7 +327,6 @@
                             <div class="bg-white p-6 rounded-lg shadow-sm">
                                 <h2 class="text-xl font-bold text-gray-800 mb-4">Upload Ad</h2>
                                 <form id="ad-form">
-                                    <!-- FIX: Added caption input -->
                                     <div class="mb-4">
                                         <label for="ad-caption" class="block text-sm font-medium text-gray-700 mb-1">Ad Caption (Optional)</label>
                                         <input type="text" id="ad-caption" class="form-input" placeholder="e.g., 'Special Offer!'">
@@ -361,12 +360,12 @@
                                 <h2 class="text-xl font-bold text-gray-800 mb-4">Add Sub-Admin</h2>
                                 <form id="add-subadmin-form">
                                     <div class="mb-4">
-                                        <label for="subadmin-mobile" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                                        <input type="tel" id="subadmin-mobile" class="form-input" pattern="[0-9]{10}" maxlength="10" required>
+                                        <label for="subadmin-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="subadmin-email" class="form-input" required>
                                     </div>
                                     <div class="mb-4">
-                                        <label for="subadmin-pin" class="block text-sm font-medium text-gray-700 mb-1">4-Digit PIN</label>
-                                        <input type="password" id="subadmin-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" required>
+                                        <label for="subadmin-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                        <input type="password" id="subadmin-password" class="form-input" required>
                                     </div>
                                     <button type="submit" class="btn btn-primary w-full">Add Sub-Admin</button>
                                 </form>
@@ -451,12 +450,12 @@
             <h2 class="text-xl font-bold mb-4">Admin / Sub-Admin Login</h2>
             <form id="admin-login-form">
                 <div class="mb-4">
-                    <label for="admin-mobile" class="block text-sm font-medium text-gray-700 mb-1">Admin Mobile</label>
-                    <input type="tel" id="admin-mobile" class="form-input" pattern="[0-9]{10}" maxlength="10" required>
+                    <label for="admin-email" class="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>
+                    <input type="email" id="admin-email" class="form-input" required>
                 </div>
                 <div class="mb-4">
-                    <label for="admin-pin" class="block text-sm font-medium text-gray-700 mb-1">Admin PIN</label>
-                    <input type="password" id="admin-pin" class="form-input" pattern="[0-9]{4}" maxlength="4" required>
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-1">Admin Password</label>
+                    <input type="password" id="admin-password" class="form-input" required>
                 </div>
                 <div id="admin-login-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
                 <div class="flex justify-end gap-3">
@@ -501,7 +500,6 @@
             getDocs,
             serverTimestamp
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // FIX: Import Firebase Storage modules
         import {
             getStorage,
             ref,
@@ -512,21 +510,20 @@
 
 
         // --- App State ---
-        let auth, db, storage; // FIX: Added storage
+        let auth, db, storage;
         let currentUser = null;
         let userRole = 'student';
         let unsubscribeSubjects = null;
         let unsubscribeEnquiries = null;
-        let unsubscribeAds = null; // FIX: Initialized variable
+        let unsubscribeAds = null;
         let unsubscribeSubAdmins = null;
 
         // --- Config ---
-        // A default config is provided for development, but it will be replaced by the environment's config.
         const userProvidedConfig = {
             apiKey: "AIzaSyDjh0fSIdc39G2htzp205C1OheJ8t8dnf4",
             authDomain: "asr-attendance-56791.firebaseapp.com",
             projectId: "asr-attendance-56791",
-            storageBucket: "asr-attendance-56791.appspot.com", // FIX: Corrected storage bucket domain
+            storageBucket: "asr-attendance-56791.appspot.com",
             messagingSenderId: "349816783965",
             appId: "1:349816783965:web:f6a1a57e3eddd966f1f9b4",
             measurementId: "G-1WBWNRX9QB"
@@ -534,8 +531,8 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(userProvidedConfig));
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        const ADMIN_MOBILE = '9603230138';
-        const ADMIN_PIN = '0210';
+        const ADMIN_EMAIL = 'admin@attendance.app';
+        const ADMIN_PASSWORD = 'adminpassword';
         
         // --- UI Elements ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -585,7 +582,7 @@
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
-                storage = getStorage(app); // FIX: Initialize Storage
+                storage = getStorage(app);
                 setupAuthListener();
             } catch (error)
             {
@@ -597,11 +594,9 @@
         // --- Auth Listener ---
         function setupAuthListener() {
             onAuthStateChanged(auth, async (user) => {
-                // If user exists, fetch their role and setup the dashboard.
                 if (user) {
                     currentUser = user;
                     await fetchUserRoleAndSetupDashboard(user.uid);
-                // Otherwise, show the authentication page.
                 } else {
                     currentUser = null;
                     showPage('auth');
@@ -626,14 +621,12 @@
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 userRole = userData.role || 'student';
-                document.getElementById('user-display-name').textContent = userData.mobile;
+                document.getElementById('user-display-name').textContent = userData.email;
                 document.getElementById('user-id-display').textContent = uid.substring(0, 10) + '...';
                 setupDashboard(userRole);
             } else {
-                // This might be a new user, default to student
                 userRole = 'student';
-                 // The signup function will set the name, but we can set a default here
-                document.getElementById('user-display-name').textContent = 'New User';
+                document.getElementById('user-display-name').textContent = currentUser.email;
                 setupDashboard('student');
             }
         }
@@ -656,41 +649,37 @@
             studentDashboard.classList.add('hidden');
             adminDashboard.classList.add('hidden');
             
-            // Detach previous listeners to prevent memory leaks
             if(unsubscribeSubjects) unsubscribeSubjects();
             if(unsubscribeEnquiries) unsubscribeEnquiries();
             if(unsubscribeAds) unsubscribeAds();
             if(unsubscribeSubAdmins) unsubscribeSubAdmins();
             
-            listenForAds(); // All roles see ads
+            listenForAds();
 
             if (role === 'student') {
                 studentDashboard.classList.remove('hidden');
                 listenForSubjects();
                 loadTimetable();
-                 switchTab('attendance'); // Default tab
+                 switchTab('attendance');
             } else {
                 adminDashboard.classList.remove('hidden');
                 document.getElementById('subadmin-mgmt-tab-btn').style.display = (role === 'admin') ? 'flex' : 'none';
                 listenForEnquiries();
                 if(role === 'admin') listenForSubAdmins();
-                switchAdminTab('enquiries-admin'); // Default tab
+                switchAdminTab('enquiries-admin');
             }
             showPage('dashboard');
         }
 
         // --- Authentication Logic ---
-        async function handleSignup(mobile, pin) {
-            // Firebase auth uses email format, so we create a dummy email.
-            const email = `${mobile}@attendance.app`;
+        async function handleSignup(email, password) {
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, pin);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                // Create user profile in Firestore
                 const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}`);
                 await setDoc(userDocRef, {
-                    mobile: mobile,
+                    email: email,
                     role: 'student',
                     createdAt: serverTimestamp()
                 });
@@ -698,29 +687,30 @@
                 showToast("Signup successful! Welcome.", "success");
             } catch (error) {
                 if (error.code === 'auth/email-already-in-use') {
-                    showAuthError("This mobile number is already registered.");
-                } else {
+                    showAuthError("This email is already registered.");
+                } else if (error.code === 'auth/weak-password') {
+                    showAuthError("Password should be at least 6 characters.");
+                }
+                else {
                     showAuthError("Signup failed. Please try again.");
                 }
                 console.error("Signup error:", error);
             }
         }
 
-        async function handleLogin(mobile, pin) {
-            const email = `${mobile}@attendance.app`;
+        async function handleLogin(email, password) {
             try {
-                await signInWithEmailAndPassword(auth, email, pin);
+                await signInWithEmailAndPassword(auth, email, password);
                  hideAuthError();
             } catch (error) {
-                showAuthError("Invalid mobile number or PIN.");
+                showAuthError("Invalid email or password.");
                 console.error("Login error:", error);
             }
         }
         
-        async function handleAdminLogin(mobile, pin) {
+        async function handleAdminLogin(email, password) {
             hideAuthError('admin-login');
-            // Main Admin Login
-            if (mobile === ADMIN_MOBILE && pin === ADMIN_PIN) {
+            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 userRole = 'admin';
                 document.getElementById('user-display-name').textContent = 'Main Admin';
                 document.getElementById('user-id-display').textContent = 'admin';
@@ -729,38 +719,35 @@
                 return;
             }
 
-            // Check for sub-admin
             const subAdminsRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
-            const q = query(subAdminsRef, where("mobile", "==", mobile));
+            const q = query(subAdminsRef, where("email", "==", email));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                showAuthError("No admin account found for this mobile.", 'admin-login');
+                showAuthError("No admin account found for this email.", 'admin-login');
                 return;
             }
             
             const subAdminDoc = querySnapshot.docs[0];
             const subAdminData = subAdminDoc.data();
 
-            if (subAdminData.pin === pin) {
+            if (subAdminData.password === password) {
                 userRole = 'subadmin';
-                document.getElementById('user-display-name').textContent = `Sub-Admin (${mobile})`;
+                document.getElementById('user-display-name').textContent = `Sub-Admin (${email})`;
                 document.getElementById('user-id-display').textContent = subAdminDoc.id.substring(0,10) + '...';
-                currentUser = { uid: subAdminDoc.id }; // Simulate user object for consistency
+                currentUser = { uid: subAdminDoc.id };
                 setupDashboard('subadmin');
                 closeModal('admin-login-modal');
             } else {
-                 showAuthError("Incorrect PIN.", 'admin-login');
+                 showAuthError("Incorrect password.", 'admin-login');
             }
         }
 
         async function handleLogout() {
-            // For simulated admin/sub-admin, we just reload to go back to the auth page.
             if (userRole === 'admin' || userRole === 'subadmin') {
                 window.location.reload();
                 return;
             }
-            // For regular users, sign out properly.
             try {
                 await signOut(auth);
             } catch (error) {
@@ -770,22 +757,22 @@
 
         // --- Event Listeners ---
         document.getElementById('signup-btn').addEventListener('click', () => {
-            const mobile = document.getElementById('auth-email').value;
-            const pin = document.getElementById('auth-pin').value;
-            if (mobile.length !== 10 || pin.length !== 4) {
-                 showAuthError("Please enter a valid 10-digit mobile and 4-digit PIN.");
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+             if (!email || !password) {
+                 showAuthError("Please enter both email and password.");
                  return;
             }
             hideAuthError();
-            handleSignup(mobile, pin);
+            handleSignup(email, password);
         });
 
         document.getElementById('login-btn').addEventListener('click', () => {
-            const mobile = document.getElementById('auth-email').value;
-            const pin = document.getElementById('auth-pin').value;
-            if (!mobile || !pin) return;
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) return;
             hideAuthError();
-            handleLogin(mobile, pin);
+            handleLogin(email, password);
         });
         
         document.getElementById('admin-login-prompt').addEventListener('click', (e) => {
@@ -795,9 +782,9 @@
 
         document.getElementById('admin-login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const mobile = document.getElementById('admin-mobile').value;
-            const pin = document.getElementById('admin-pin').value;
-            handleAdminLogin(mobile, pin);
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            handleAdminLogin(email, password);
         });
 
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
@@ -831,11 +818,11 @@
             const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
 
             try {
-                if (subjectId) { // Update existing subject
+                if (subjectId) {
                     const subjectDocRef = doc(subjectsColRef, subjectId);
                     await updateDoc(subjectDocRef, subjectData);
                     showToast('Subject updated successfully!');
-                } else { // Add new subject
+                } else {
                     await addDoc(subjectsColRef, subjectData);
                     showToast('Subject added successfully!');
                 }
@@ -1053,11 +1040,9 @@
             }
             const today = days[todayIndex];
 
-            // Fetch timetable
             const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
             const timetableSnap = await getDoc(timetableDocRef);
             
-            // Fetch subjects
             const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
             const subjectsSnap = await getDocs(subjectsColRef);
             const subjectsMap = new Map();
@@ -1077,7 +1062,7 @@
             }
             
             let html = '<div class="space-y-4">';
-            const uniqueClasses = [...new Set(classesForToday)]; // Handle duplicate entries in timetable
+            const uniqueClasses = [...new Set(classesForToday)];
             uniqueClasses.forEach(subjectName => {
                 const subjectData = subjectsMap.get(subjectName);
                 if (subjectData) {
@@ -1178,7 +1163,6 @@
                 let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">College</th><th class="px-6 py-3">Description</th><th class="px-6 py-3">Submitted</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
                 const enquiries = [];
                 snapshot.forEach(doc => enquiries.push({ id: doc.id, ...doc.data() }));
-                // Sort by date, newest first
                 enquiries.sort((a, b) => (b.submittedAt?.seconds || 0) - (a.submittedAt?.seconds || 0));
 
                 enquiries.forEach(enq => {
@@ -1206,20 +1190,20 @@
         // Sub-Admins
         document.getElementById('add-subadmin-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const mobile = document.getElementById('subadmin-mobile').value;
-            const pin = document.getElementById('subadmin-pin').value;
+            const email = document.getElementById('subadmin-email').value;
+            const password = document.getElementById('subadmin-password').value;
             
             const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
-            const q = query(subAdminsColRef, where("mobile", "==", mobile));
+            const q = query(subAdminsColRef, where("email", "==", email));
             const existing = await getDocs(q);
 
             if (!existing.empty) {
-                showToast('A sub-admin with this mobile already exists.', 'error');
+                showToast('A sub-admin with this email already exists.', 'error');
                 return;
             }
 
             try {
-                await addDoc(subAdminsColRef, { mobile, pin, createdAt: serverTimestamp() });
+                await addDoc(subAdminsColRef, { email, password, createdAt: serverTimestamp() });
                 showToast('Sub-Admin added successfully!', 'success');
                 e.target.reset();
             } catch(error) {
@@ -1237,10 +1221,10 @@
                     return;
                 }
                 
-                let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Mobile Number</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
+                let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Email</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
                 snapshot.forEach(doc => {
                     const sa = { id: doc.id, ...doc.data() };
-                    html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${sa.mobile}</td><td class="px-6 py-4"><button onclick="window.deleteSubAdmin('${sa.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
+                    html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${sa.email}</td><td class="px-6 py-4"><button onclick="window.deleteSubAdmin('${sa.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
                 });
                 html += '</tbody></table>';
                 listEl.innerHTML = html;
@@ -1279,13 +1263,11 @@
                 return;
             }
 
-            // Show loader
             uploadText.classList.add('hidden');
             uploadLoader.classList.remove('hidden');
             uploadBtn.disabled = true;
 
             try {
-                // FIX: Use Firebase storage instead of base64
                 const storageRef = ref(storage, `artifacts/${appId}/ads/${Date.now()}-${file.name}`);
                 await uploadBytes(storageRef, file);
                 const url = await getDownloadURL(storageRef);
@@ -1294,7 +1276,7 @@
                 await addDoc(adsColRef, {
                     url,
                     caption,
-                    type: file.type.startsWith('video') ? 'video' : 'image', // Store file type
+                    type: file.type.startsWith('video') ? 'video' : 'image',
                     uploaderId: currentUser?.uid,
                     createdAt: serverTimestamp()
                 });
@@ -1305,7 +1287,6 @@
                 console.error("Ad upload error:", error);
                 showToast('Failed to upload ad.', 'error');
             } finally {
-                // Hide loader
                 uploadText.classList.remove('hidden');
                 uploadLoader.classList.add('hidden');
                 uploadBtn.disabled = false;
@@ -1332,17 +1313,14 @@
                 ads.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 ads.forEach(ad => {
-                    // FIX: Use ad.url and check ad.type
                     const mediaHtml = ad.type === 'video'
                         ? `<video src="${ad.url}" class="w-full h-full object-cover" controls muted loop playsinline></video>`
                         : `<img src="${ad.url}" alt="${ad.caption || 'Advertisement'}" class="w-full h-full object-cover">`;
                     
-                    // For floating ads bar (all users)
                     adsBarInner.innerHTML += `<div class="relative group flex-shrink-0 w-28 h-36 bg-gray-200 rounded-md shadow-md overflow-hidden">${mediaHtml}
                         ${ad.caption ? `<div class="absolute bottom-0 left-0 w-full bg-black/50 text-white text-xs p-1 text-center truncate">${ad.caption}</div>` : ''}
                     </div>`;
                     
-                    // For admin management list (if on admin page)
                     if(adminAdsList){
                         const canDelete = (userRole === 'admin') || (userRole === 'subadmin' && ad.uploaderId === currentUser.uid);
                         const deleteBtnHtml = canDelete ? `<button onclick="window.deleteAd('${ad.id}', '${ad.url}')" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 z-10"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '';
@@ -1362,16 +1340,14 @@
         async function deleteAd(id, url) {
              if (window.confirm('Delete this ad permanently?')) {
                 const docRef = doc(db, `artifacts/${appId}/public/data/ads`, id);
-                // FIX: Also delete file from storage
                 const storageRef = ref(storage, url);
                 try {
                     await deleteObject(storageRef);
                     await deleteDoc(docRef);
                     showToast('Ad deleted successfully.');
                 } catch (error) {
-                    // Handle case where file might already be deleted from storage but doc remains
                     if (error.code === 'storage/object-not-found') {
-                        await deleteDoc(docRef); // Still delete the doc
+                        await deleteDoc(docRef);
                         showToast('Ad record deleted.');
                     } else {
                         showToast('Failed to delete ad.', 'error');
@@ -1397,7 +1373,6 @@
             generateTimetableGrid();
             lucide.createIcons();
             
-            // Default student tab style
             const defaultTab = document.querySelector('.tab-btn[data-tab="attendance"]');
             defaultTab.style.color = 'var(--brand-blue)';
             defaultTab.style.borderColor = 'var(--brand-blue)';
@@ -1405,3 +1380,4 @@
     </script>
 </body>
 </html>
+
