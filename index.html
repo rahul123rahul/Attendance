@@ -6,7 +6,7 @@
     <title>B.Tech Attendance Tracking System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
+        :root { 
             --primary-bg: #f7fafc;
             --primary-text: #1a202c;
             --brand-blue: #2b6cb0;
@@ -143,6 +143,38 @@
             height: 100%;
             border-radius: 9999px;
             transition: width 0.5s ease-in-out;
+        }
+
+        /* Timetable Grid Styling */
+        #timetable-grid th, #timetable-grid td {
+            min-width: 100px;
+        }
+        #timetable-grid input {
+            padding: 0.5rem;
+            background-color: transparent;
+        }
+
+        /* Tabs Styling */
+         .tab-btn, .admin-tab-btn {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            padding: 0.5rem 0;
+            font-weight: 500;
+            border-bottom-width: 2px;
+            border-color: transparent;
+            color: #6b7280;
+            transition: color 0.15s, border-color 0.15s;
+            background: none;
+            cursor: pointer;
+        }
+        .tab-btn:hover, .admin-tab-btn:hover {
+            color: #4b5563;
+            border-color: #d1d5db;
+        }
+        .tab-btn.active, .admin-tab-btn.active {
+            color: var(--brand-blue) !important;
+            border-color: var(--brand-blue) !important;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -531,6 +563,7 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(userProvidedConfig));
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
+        // NOTE: For demonstration, these credentials are hardcoded. In a real application, Admin should sign in via a dedicated Auth method.
         const ADMIN_EMAIL = 'admin@attendance.app';
         const ADMIN_PASSWORD = 'adminpassword';
         
@@ -603,14 +636,11 @@
                 }
             });
 
-             // Authenticate with provided token or anonymously
+             // Authenticate with provided token only.
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 signInWithCustomToken(auth, __initial_auth_token).catch(err => {
                     console.error("Custom token sign-in failed:", err);
-                    signInAnonymously(auth); // Fallback
                 });
-            } else {
-                signInAnonymously(auth);
             }
         }
         
@@ -621,12 +651,24 @@
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 userRole = userData.role || 'student';
-                document.getElementById('user-display-name').textContent = userData.email;
+                document.getElementById('user-display-name').textContent = userData.email || 'User';
                 document.getElementById('user-id-display').textContent = uid.substring(0, 10) + '...';
                 setupDashboard(userRole);
             } else {
+                // Initial creation for a brand new user
                 userRole = 'student';
-                document.getElementById('user-display-name').textContent = currentUser.email;
+                const displayEmail = currentUser?.email || 'User';
+                document.getElementById('user-display-name').textContent = displayEmail;
+                document.getElementById('user-id-display').textContent = uid ? uid.substring(0,10) + '...' : 'anonymous';
+                
+                // Create minimal user profile
+                 if (currentUser.email) {
+                    await setDoc(userDocRef, {
+                        email: currentUser.email,
+                        role: 'student',
+                        createdAt: serverTimestamp()
+                    });
+                }
                 setupDashboard('student');
             }
         }
@@ -643,25 +685,28 @@
                 mainContent.classList.remove('hidden');
                 document.getElementById('ads-bar').classList.remove('hidden');
             }
+            lucide.createIcons();
         }
 
         function setupDashboard(role) {
             studentDashboard.classList.add('hidden');
             adminDashboard.classList.add('hidden');
             
+            // Cleanup previous listeners
             if(unsubscribeSubjects) unsubscribeSubjects();
             if(unsubscribeEnquiries) unsubscribeEnquiries();
             if(unsubscribeAds) unsubscribeAds();
             if(unsubscribeSubAdmins) unsubscribeSubAdmins();
             
+            // Global listeners
             listenForAds();
 
             if (role === 'student') {
                 studentDashboard.classList.remove('hidden');
                 listenForSubjects();
                 loadTimetable();
-                 switchTab('attendance');
-            } else {
+                switchTab('attendance');
+            } else { // admin or subadmin
                 adminDashboard.classList.remove('hidden');
                 document.getElementById('subadmin-mgmt-tab-btn').style.display = (role === 'admin') ? 'flex' : 'none';
                 listenForEnquiries();
@@ -710,6 +755,7 @@
         
         async function handleAdminLogin(email, password) {
             hideAuthError('admin-login');
+            // Check Main Admin (Hardcoded)
             if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 userRole = 'admin';
                 document.getElementById('user-display-name').textContent = 'Main Admin';
@@ -719,6 +765,7 @@
                 return;
             }
 
+            // Check Sub-Admin (Firestore)
             const subAdminsRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
             const q = query(subAdminsRef, where("email", "==", email));
             const querySnapshot = await getDocs(q);
@@ -735,7 +782,7 @@
                 userRole = 'subadmin';
                 document.getElementById('user-display-name').textContent = `Sub-Admin (${email})`;
                 document.getElementById('user-id-display').textContent = subAdminDoc.id.substring(0,10) + '...';
-                currentUser = { uid: subAdminDoc.id };
+                currentUser = { uid: subAdminDoc.id, email: email }; // Simulate a user object for dashboard context
                 setupDashboard('subadmin');
                 closeModal('admin-login-modal');
             } else {
@@ -745,7 +792,8 @@
 
         async function handleLogout() {
             if (userRole === 'admin' || userRole === 'subadmin') {
-                window.location.reload();
+                // For admin/subadmin custom login, just reload to clear state and return to auth page
+                window.location.reload(); 
                 return;
             }
             try {
@@ -834,7 +882,7 @@
         });
         
         async function deleteSubject(subjectId) {
-             if (window.confirm('Are you sure you want to delete this subject?')) {
+             if (confirm('Are you sure you want to delete this subject?')) {
                 try {
                     const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
                     await deleteDoc(subjectDocRef);
@@ -855,6 +903,10 @@
             document.getElementById('subject-form-error').classList.add('hidden');
             openModal('subject-modal');
         }
+        
+        // Expose to window for HTML onclick
+        window.deleteSubject = deleteSubject;
+        window.editSubject = editSubject;
 
         function listenForSubjects() {
             const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
@@ -882,7 +934,7 @@
                             <div class="flex justify-between items-start">
                                 <h3 class="text-lg font-bold text-gray-800">${subject.name}</h3>
                                 <div class="flex gap-2">
-                                     <button onclick="window.editSubject('${subject.id}', '${subject.name}', ${subject.total}, ${subject.attended})" class="text-gray-400 hover:text-brand-blue"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                                     <button onclick="window.editSubject('${subject.id}', '${subject.name.replace(/'/g, "\\'")}', ${subject.total}, ${subject.attended})" class="text-gray-400 hover:text-brand-blue"><i data-lucide="edit" class="w-5 h-5"></i></button>
                                      <button onclick="window.deleteSubject('${subject.id}')" class="text-gray-400 hover:text-danger"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                                 </div>
                             </div>
@@ -930,13 +982,15 @@
             if (overallPercentage >= 75) {
                 statusEl.textContent = 'Safe Zone';
                 statusEl.className = 'text-2xl font-bold mt-2 text-green-600';
-                const maxBunk = Math.floor((totalAttended / 0.75) - totalClasses);
-                bunkInfoEl.textContent = `You can safely bunk ${maxBunk} more classes.`;
+                // Classes you can afford to skip while maintaining 75%
+                const maxBunk = Math.floor(totalAttended / 0.75 - totalClasses);
+                bunkInfoEl.textContent = `You can safely bunk ${Math.max(0, maxBunk)} more classes.`;
             } else {
                 statusEl.textContent = 'Danger Zone';
                 statusEl.className = 'text-2xl font-bold mt-2 text-red-600';
-                const needed = Math.ceil((0.75 * totalClasses - totalAttended) / 0.25);
-                bunkInfoEl.textContent = `Attend the next ${needed} classes to reach 75%.`;
+                // Classes needed to attend to reach 75% (0.75 * (Total + X) = Attended + X)
+                const needed = Math.ceil((3 * totalClasses - 4 * totalAttended));
+                bunkInfoEl.textContent = `Attend the next ${Math.max(0, needed)} classes to reach 75%.`;
             }
         }
         
@@ -973,7 +1027,7 @@
             const table = document.getElementById('timetable-grid');
             let thead = '<thead><tr><th class="p-2 border border-gray-300">Day/Period</th>';
             for(let i=1; i<=periods; i++) {
-                thead += `<th class="p-2 border border-gray-300">${i}</th>`;
+                thead += `<th class="p-2 border border-gray-300">P${i}</th>`;
             }
             thead += '</tr></thead>';
             
@@ -981,39 +1035,38 @@
             days.forEach(day => {
                 tbody += `<tr><td class="p-2 border border-gray-300 font-semibold">${day}</td>`;
                 for(let i=1; i<=periods; i++) {
-                    tbody += `<td class="p-1 border border-gray-300"><input type="text" data-day="${day}" data-period="${i}" class="w-24 text-center border-none focus:ring-2 focus:ring-brand-blue rounded"></td>`;
+                    tbody += `<td class="p-1 border border-gray-300"><input type="text" data-day="${day}" data-period="${i}" class="w-full text-center border-none focus:ring-2 focus:ring-brand-blue rounded"></td>`;
                 }
                 tbody += '</tr>';
             });
             tbody += '</tbody>';
             table.innerHTML = thead + tbody;
         }
-
-        document.getElementById('save-timetable-btn').addEventListener('click', async () => {
-            const timetableData = {};
-            document.querySelectorAll('#timetable-grid input').forEach(input => {
-                const day = input.dataset.day;
-                const period = input.dataset.period;
-                if (!timetableData[day]) timetableData[day] = {};
-                timetableData[day][period] = input.value.trim();
-            });
-            
+        
+        async function saveTimetable(timetableData) {
             try {
-                const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
-                await setDoc(timetableDocRef, { schedule: timetableData });
+                const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/timetable/current`);
+                await setDoc(timetableDocRef, { 
+                    grid: JSON.stringify(timetableData),
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
                 showToast('Timetable saved successfully!', 'success');
             } catch (error) {
-                console.error("Error saving timetable: ", error);
+                console.error("Error saving timetable:", error);
                 showToast('Failed to save timetable.', 'error');
             }
-        });
-
+        }
+        
         async function loadTimetable() {
+            if (!currentUser) return;
+            generateTimetableGrid(); 
+            
             try {
-                const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
+                const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/timetable/current`);
                 const docSnap = await getDoc(timetableDocRef);
-                if (docSnap.exists()) {
-                    const timetableData = docSnap.data().schedule;
+                
+                if (docSnap.exists() && docSnap.data().grid) {
+                    const timetableData = JSON.parse(docSnap.data().grid);
                     document.querySelectorAll('#timetable-grid input').forEach(input => {
                         const day = input.dataset.day;
                         const period = input.dataset.period;
@@ -1023,269 +1076,354 @@
                     });
                 }
             } catch (error) {
-                console.error("Error loading timetable: ", error);
+                console.error("Error loading timetable:", error);
             }
         }
-
-        // --- Student: Mark Attendance ---
-        document.getElementById('open-mark-attendance-modal-btn').addEventListener('click', async () => {
-            const listEl = document.getElementById('daily-classes-list');
-            listEl.innerHTML = '<div class="loader mx-auto"></div>';
-            openModal('mark-attendance-modal');
-
-            const todayIndex = (new Date().getDay() + 6) % 7; // Monday is 0
-            if (todayIndex > 5) { // Sunday
-                listEl.innerHTML = '<p class="text-gray-600 text-center">It\'s Sunday! No classes today.</p>';
-                return;
-            }
-            const today = days[todayIndex];
-
-            const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/data/timetable`);
-            const timetableSnap = await getDoc(timetableDocRef);
-            
-            const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
-            const subjectsSnap = await getDocs(subjectsColRef);
-            const subjectsMap = new Map();
-            subjectsSnap.forEach(doc => subjectsMap.set(doc.data().name, {id: doc.id, ...doc.data()}));
-            
-            if (!timetableSnap.exists() || !timetableSnap.data().schedule[today]) {
-                 listEl.innerHTML = '<p class="text-gray-600 text-center">No classes scheduled for today in your timetable.</p>';
-                 return;
-            }
-            
-            const todaySchedule = timetableSnap.data().schedule[today];
-            const classesForToday = Object.values(todaySchedule).filter(name => name.trim() !== '');
-            
-            if (classesForToday.length === 0) {
-                 listEl.innerHTML = '<p class="text-gray-600 text-center">No classes scheduled for today in your timetable.</p>';
-                 return;
-            }
-            
-            let html = '<div class="space-y-4">';
-            const uniqueClasses = [...new Set(classesForToday)];
-            uniqueClasses.forEach(subjectName => {
-                const subjectData = subjectsMap.get(subjectName);
-                if (subjectData) {
-                    html += `
-                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                            <span class="font-semibold">${subjectName}</span>
-                            <div class="flex gap-2">
-                                <button onclick="markAttendance('${subjectData.id}', true)" class="btn bg-green-100 text-green-800 hover:bg-green-200 text-sm py-1 px-3">Present</button>
-                                <button onclick="markAttendance('${subjectData.id}', false)" class="btn bg-red-100 text-red-800 hover:bg-red-200 text-sm py-1 px-3">Absent</button>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                     html += `<div class="bg-yellow-50 p-3 rounded-lg text-sm">Subject <b>"${subjectName}"</b> from timetable not found in your subjects list. Please add it first.</div>`;
+        
+        document.getElementById('save-timetable-btn').addEventListener('click', async () => {
+            const timetableData = {};
+            document.querySelectorAll('#timetable-grid input').forEach(input => {
+                const day = input.dataset.day;
+                const period = input.dataset.period;
+                if (!timetableData[day]) timetableData[day] = {};
+                const value = input.value.trim();
+                if (value) {
+                    timetableData[day][period] = value;
                 }
             });
-            html += '</div>';
-            listEl.innerHTML = html;
+            await saveTimetable(timetableData);
         });
         
-        async function markAttendance(subjectId, wasPresent) {
-             const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
-             try {
-                const subjectSnap = await getDoc(subjectDocRef);
-                if (!subjectSnap.exists()) {
-                    showToast('Subject not found.', 'error');
-                    return;
-                }
-                const subject = subjectSnap.data();
-                const newTotal = subject.total + 1;
-                const newAttended = wasPresent ? subject.attended + 1 : subject.attended;
-
-                await updateDoc(subjectDocRef, {
-                    total: newTotal,
-                    attended: newAttended
-                });
-                
-                showToast(`Marked ${wasPresent ? 'Present' : 'Absent'} for ${subject.name}`, 'success');
-             } catch(error) {
-                console.error("Error marking attendance: ", error);
-                showToast('Failed to mark attendance.', 'error');
+        // --- Student: Mark Attendance ---
+        
+        const markAttendanceModalBtn = document.getElementById('open-mark-attendance-modal-btn');
+        markAttendanceModalBtn.addEventListener('click', async () => {
+             if (!currentUser) return;
+             
+             // 1. Check if attendance has already been marked today
+             const userDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}`);
+             const userDoc = await getDoc(userDocRef);
+             const lastMarkedDate = userDoc.data()?.lastMarkedDate;
+             
+             const today = new Date().toDateString();
+             if (lastMarkedDate === today) {
+                showToast("Attendance for today is already marked!", "warning");
+                return;
              }
+             
+             // 2. Load today's subjects from timetable
+             const timetableDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/timetable/current`);
+             const timetableSnap = await getDoc(timetableDocRef);
+             const dayOfWeek = days[new Date().getDay() - 1]; // 0=Sun, 1=Mon, ..., 6=Sat
+             
+             let todaysClasses = [];
+             if (timetableSnap.exists() && timetableSnap.data().grid) {
+                 const timetableData = JSON.parse(timetableSnap.data().grid);
+                 const dailySchedule = timetableData[dayOfWeek] || {};
+                 
+                 // Collect unique subject names for today
+                 const subjectNames = new Set(Object.values(dailySchedule).filter(name => name));
+                 
+                 if (subjectNames.size === 0) {
+                     document.getElementById('daily-classes-list').innerHTML = `<p class="text-center text-gray-500">No classes scheduled for ${dayOfWeek}.</p>`;
+                     openModal('mark-attendance-modal');
+                     return;
+                 }
+                 
+                 // Get subject details from Firestore
+                 const subjectsColRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`);
+                 const subjectSnap = await getDocs(subjectsColRef);
+                 const subjectMap = {};
+                 subjectSnap.forEach(d => { subjectMap[d.data().name] = { id: d.id, ...d.data() }; });
+                 
+                 todaysClasses = Array.from(subjectNames).map(name => ({
+                     name: name,
+                     id: subjectMap[name] ? subjectMap[name].id : null,
+                     attended: 'Present' 
+                 }));
+             }
+             
+             renderDailyAttendanceForm(todaysClasses, dayOfWeek);
+             openModal('mark-attendance-modal');
+        });
+        
+        function renderDailyAttendanceForm(classes, day) {
+            const listEl = document.getElementById('daily-classes-list');
+            
+            if (classes.length === 0) {
+                listEl.innerHTML = `<p class="text-center text-gray-500">No classes found for ${day}. Please set up your timetable.</p>`;
+                return;
+            }
+
+            let html = `<p class="text-sm text-gray-500 mb-4">Select Present/Absent for each class on <span class="font-bold">${day}</span>.</p>`;
+            
+            classes.forEach((c, index) => {
+                const subjectId = c.id || `untracked-${index}`;
+                html += `
+                    <div class="flex items-center justify-between p-3 mb-2 bg-gray-50 rounded-lg border">
+                        <span class="font-medium text-gray-700">${c.name}</span>
+                        <div class="flex space-x-3">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="att-${subjectId}" value="Present" class="text-brand-blue form-radio" checked data-subject-id="${c.id}" data-subject-name="${c.name}">
+                                <span class="ml-2 text-green-600 font-semibold">P</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="att-${subjectId}" value="Absent" class="text-danger form-radio" data-subject-id="${c.id}" data-subject-name="${c.name}">
+                                <span class="ml-2 text-red-600 font-semibold">A</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `<button id="submit-daily-attendance" class="btn btn-primary w-full mt-4">Confirm Attendance</button>`;
+            listEl.innerHTML = html;
+            
+            document.getElementById('submit-daily-attendance').addEventListener('click', handleSubmitDailyAttendance);
         }
         
-        // --- Student: Enquiry Form ---
+        async function handleSubmitDailyAttendance() {
+            const selected = document.querySelectorAll('#daily-classes-list input:checked');
+            if (selected.length === 0) return;
+            
+            const batch = writeBatch(db);
+            let totalMarked = 0;
+            
+            // 1. Update each subject document
+            for (const input of selected) {
+                const subjectId = input.dataset.subjectId;
+                const status = input.value; 
+                
+                if (subjectId && subjectId !== 'null') { 
+                    const subjectDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/subjects`, subjectId);
+                    
+                    const currentSubjectSnap = await getDoc(subjectDocRef);
+                    if (currentSubjectSnap.exists()) {
+                         const currentData = currentSubjectSnap.data();
+                         const newAttended = currentData.attended + (status === 'Present' ? 1 : 0);
+                         const newTotal = currentData.total + 1;
+    
+                         batch.update(subjectDocRef, {
+                             attended: newAttended,
+                             total: newTotal
+                         });
+                         totalMarked++;
+                    }
+                }
+            }
+            
+            // 2. Update user's last marked date
+            const userDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}`);
+            batch.update(userDocRef, { lastMarkedDate: new Date().toDateString() });
+
+            try {
+                await batch.commit();
+                closeModal('mark-attendance-modal');
+                showToast(`Attendance marked for ${totalMarked} class(es)!`, 'success');
+            } catch (error) {
+                console.error("Error committing attendance batch:", error);
+                showToast('Failed to mark attendance. Check console.', 'error');
+            }
+        }
+        
+        // --- Student: Enquiry ---
+        
         document.getElementById('enquiry-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const form = e.target;
             const enquiryData = {
-                name: document.getElementById('enq-name').value,
-                college: document.getElementById('enq-college').value,
-                email: document.getElementById('enq-email').value,
-                description: document.getElementById('enq-desc').value,
-                userId: currentUser?.uid || 'anonymous',
-                submittedAt: serverTimestamp()
+                name: form['enq-name'].value,
+                college: form['enq-college'].value,
+                email: form['enq-email'].value,
+                description: form['enq-desc'].value,
+                userId: currentUser.uid,
+                createdAt: serverTimestamp(),
+                status: 'New'
             };
             
             try {
                 const enquiriesColRef = collection(db, `artifacts/${appId}/public/data/enquiries`);
                 await addDoc(enquiriesColRef, enquiryData);
-                showToast('Enquiry submitted successfully!', 'success');
-                e.target.reset();
+                form.reset();
+                showToast('Enquiry submitted successfully! We will review it soon.', 'success');
             } catch (error) {
                 console.error("Error submitting enquiry:", error);
                 showToast('Failed to submit enquiry.', 'error');
             }
         });
-
-        // --- Admin/Sub-Admin ---
+        
+        // --- Admin: Tab Switching ---
         window.switchAdminTab = (tabName) => {
-            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'text-brand-blue', 'border-brand-blue');
-                btn.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
-                 btn.style.color = '#6b7280';
-                 btn.style.borderColor = 'transparent';
-            });
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active', 'text-brand-blue', 'border-brand-blue'));
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300'));
+            
             const activeBtn = document.querySelector(`.admin-tab-btn[data-tab="${tabName}"]`);
             activeBtn.classList.add('active', 'text-brand-blue', 'border-brand-blue');
             activeBtn.classList.remove('text-gray-500', 'border-transparent');
-             activeBtn.style.color = 'var(--brand-blue)';
-             activeBtn.style.borderColor = 'var(--brand-blue)';
             
             document.getElementById('enquiries-admin-tab').classList.add('hidden');
             document.getElementById('ads-admin-tab').classList.add('hidden');
             document.getElementById('subadmins-admin-tab').classList.add('hidden');
             document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+            document.querySelectorAll('.admin-tab-btn').forEach(button => {
+              if (button.classList.contains('active')) {
+                button.style.color = 'var(--brand-blue)';
+                button.style.borderColor = 'var(--brand-blue)';
+              } else {
+                button.style.color = '#6b7280'; 
+                button.style.borderColor = 'transparent';
+              }
+            });
+             lucide.createIcons();
         }
 
-        // Enquiries
+        // --- Admin: Enquiries Management ---
+        
         function listenForEnquiries() {
+            if (userRole === 'student') return;
             const enquiriesColRef = collection(db, `artifacts/${appId}/public/data/enquiries`);
             unsubscribeEnquiries = onSnapshot(enquiriesColRef, (snapshot) => {
-                const listEl = document.getElementById('admin-enquiry-list');
-                if (snapshot.empty) {
-                    listEl.innerHTML = '<p class="p-4 text-gray-500 text-center">No enquiries yet.</p>';
-                    return;
-                }
-                
-                let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">College</th><th class="px-6 py-3">Description</th><th class="px-6 py-3">Submitted</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
                 const enquiries = [];
-                snapshot.forEach(doc => enquiries.push({ id: doc.id, ...doc.data() }));
-                enquiries.sort((a, b) => (b.submittedAt?.seconds || 0) - (a.submittedAt?.seconds || 0));
-
-                enquiries.forEach(enq => {
-                    const date = enq.submittedAt ? enq.submittedAt.toDate().toLocaleString() : 'N/A';
-                    html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${enq.name}</td><td class="px-6 py-4">${enq.college}</td><td class="px-6 py-4">${enq.description}</td><td class="px-6 py-4">${date}</td><td class="px-6 py-4"><button onclick="window.deleteEnquiry('${enq.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
+                snapshot.forEach(doc => {
+                    enquiries.push({ id: doc.id, ...doc.data() });
                 });
-                html += '</tbody></table>';
-                listEl.innerHTML = html;
+                renderEnquiriesTable(enquiries);
+            }, (error) => {
+                console.error("Error listening to enquiries:", error);
             });
+        }
+        
+        function renderEnquiriesTable(enquiries) {
+            const tableEl = document.getElementById('admin-enquiry-list');
+            
+            if (enquiries.length === 0) {
+                tableEl.innerHTML = `<p class="p-6 text-center text-gray-500">No new enquiries.</p>`;
+                return;
+            }
+            
+            let html = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User/College</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            enquiries.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)).forEach(enquiry => {
+                const date = enquiry.createdAt ? new Date(enquiry.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                let statusClass = 'text-green-600';
+                if (enquiry.status === 'New') statusClass = 'text-blue-600 font-semibold';
+                if (enquiry.status === 'In Progress') statusClass = 'text-yellow-600 font-semibold';
+                if (enquiry.status === 'Resolved') statusClass = 'text-gray-500';
+
+                html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${enquiry.name || 'Anonymous'} (${enquiry.college || 'N/A'})
+                            <p class="text-xs text-gray-400">${enquiry.email || ''}</p>
+                            <p class="text-xs text-gray-400">UID: ${enquiry.userId.substring(0, 8)}...</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs overflow-hidden truncate" title="${enquiry.description}">
+                            ${enquiry.description.substring(0, 100)}...
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${statusClass}">
+                           ${enquiry.status}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2">
+                            <button onclick="window.updateEnquiryStatus('${enquiry.id}', '${enquiry.status === 'New' ? 'In Progress' : 'Resolved'}')" class="text-indigo-600 hover:text-indigo-900" title="Set to ${enquiry.status === 'New' ? 'In Progress' : 'Resolved'}">
+                                <i data-lucide="${enquiry.status === 'New' ? 'loader' : 'check-check'}" class="w-5 h-5"></i>
+                            </button>
+                            <button onclick="window.deleteEnquiry('${enquiry.id}')" class="text-red-600 hover:text-red-900" title="Delete">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `</tbody></table></div>`;
+            tableEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        async function updateEnquiryStatus(id, newStatus) {
+            try {
+                 const docRef = doc(db, `artifacts/${appId}/public/data/enquiries`, id);
+                 await updateDoc(docRef, { status: newStatus });
+                 showToast(`Enquiry status set to ${newStatus}.`);
+            } catch (error) {
+                 console.error("Error updating enquiry status:", error);
+                 showToast('Failed to update enquiry status.', 'error');
+            }
         }
         
         async function deleteEnquiry(id) {
-            if (window.confirm('Delete this enquiry permanently?')) {
-                const docRef = doc(db, `artifacts/${appId}/public/data/enquiries`, id);
+            if (confirm('Are you sure you want to delete this enquiry?')) {
                 try {
-                    await deleteDoc(docRef);
-                    showToast('Enquiry deleted.');
+                     const docRef = doc(db, `artifacts/${appId}/public/data/enquiries`, id);
+                     await deleteDoc(docRef);
+                     showToast('Enquiry deleted.', 'success');
                 } catch (error) {
-                    showToast('Failed to delete enquiry.', 'error');
-                    console.error(error);
+                     console.error("Error deleting enquiry:", error);
+                     showToast('Failed to delete enquiry.', 'error');
                 }
             }
         }
         
-        // Sub-Admins
-        document.getElementById('add-subadmin-form').addEventListener('submit', async (e) => {
+        // --- Admin: Ad Management ---
+        
+        document.getElementById('ad-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('subadmin-email').value;
-            const password = document.getElementById('subadmin-password').value;
+            const caption = document.getElementById('ad-caption').value;
+            const fileInput = document.getElementById('ad-file');
+            const file = fileInput.files[0];
             
-            const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
-            const q = query(subAdminsColRef, where("email", "==", email));
-            const existing = await getDocs(q);
-
-            if (!existing.empty) {
-                showToast('A sub-admin with this email already exists.', 'error');
+            if (!file) {
+                showToast("Please select a file to upload.", 'warning');
                 return;
             }
 
-            try {
-                await addDoc(subAdminsColRef, { email, password, createdAt: serverTimestamp() });
-                showToast('Sub-Admin added successfully!', 'success');
-                e.target.reset();
-            } catch(error) {
-                showToast('Failed to add Sub-Admin.', 'error');
-                console.error(error);
-            }
-        });
-        
-        function listenForSubAdmins() {
-            const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
-            unsubscribeSubAdmins = onSnapshot(subAdminsColRef, (snapshot) => {
-                const listEl = document.getElementById('subadmin-list');
-                if (snapshot.empty) {
-                    listEl.innerHTML = '<p class="p-4 text-gray-500 text-center">No Sub-Admins added.</p>';
-                    return;
-                }
-                
-                let html = '<table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th class="px-6 py-3">Email</th><th class="px-6 py-3">Action</th></tr></thead><tbody>';
-                snapshot.forEach(doc => {
-                    const sa = { id: doc.id, ...doc.data() };
-                    html += `<tr class="bg-white border-b"><td class="px-6 py-4 font-medium text-gray-900">${sa.email}</td><td class="px-6 py-4"><button onclick="window.deleteSubAdmin('${sa.id}')" class="font-medium text-red-600 hover:underline">Delete</button></td></tr>`;
-                });
-                html += '</tbody></table>';
-                listEl.innerHTML = html;
-            });
-        }
-        
-        async function deleteSubAdmin(id) {
-             if (window.confirm('Delete this Sub-Admin permanently?')) {
-                const docRef = doc(db, `artifacts/${appId}/public/data/subAdmins`, id);
-                try {
-                    await deleteDoc(docRef);
-                    showToast('Sub-Admin deleted.');
-                } catch (error) {
-                    showToast('Failed to delete Sub-Admin.', 'error');
-                    console.error(error);
-                }
-            }
-        }
-        
-        // --- Ads Management ---
-        document.getElementById('ad-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('ad-file');
-            const file = fileInput.files[0];
-            const caption = document.getElementById('ad-caption').value;
             const uploadBtn = document.getElementById('ad-upload-btn');
             const uploadText = document.getElementById('ad-upload-text');
             const uploadLoader = document.getElementById('ad-upload-loader');
-
-            if (!file) {
-                showToast('Please select a file.', 'error');
-                return;
-            }
-            if (file.size > 1024 * 1024) { // 1MB limit
-                showToast('File size cannot exceed 1MB.', 'error');
-                return;
-            }
 
             uploadText.classList.add('hidden');
             uploadLoader.classList.remove('hidden');
             uploadBtn.disabled = true;
 
             try {
-                const storageRef = ref(storage, `artifacts/${appId}/ads/${Date.now()}-${file.name}`);
-                await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(storageRef);
+                // 1. Upload file to Storage
+                const timestamp = new Date().getTime();
+                const storageRef = ref(storage, `ads/${currentUser.uid}/${timestamp}-${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
 
+                // 2. Save metadata to Firestore
                 const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
                 await addDoc(adsColRef, {
-                    url,
-                    caption,
-                    type: file.type.startsWith('video') ? 'video' : 'image',
-                    uploaderId: currentUser?.uid,
+                    caption: caption,
+                    fileUrl: downloadURL,
+                    fileType: file.type.startsWith('video') ? 'video' : 'image',
+                    storagePath: snapshot.ref.fullPath,
+                    uploadedBy: currentUser.uid,
                     createdAt: serverTimestamp()
                 });
-
+                
                 showToast('Ad uploaded successfully!', 'success');
                 e.target.reset();
             } catch (error) {
-                console.error("Ad upload error:", error);
-                showToast('Failed to upload ad.', 'error');
+                console.error("Error uploading ad:", error);
+                showToast('Ad upload failed. Max file size is 1MB.', 'error');
             } finally {
                 uploadText.classList.remove('hidden');
                 uploadLoader.classList.add('hidden');
@@ -1296,88 +1434,217 @@
         function listenForAds() {
             const adsColRef = collection(db, `artifacts/${appId}/public/data/ads`);
             unsubscribeAds = onSnapshot(adsColRef, (snapshot) => {
-                const adsBarInner = document.getElementById('ads-bar-inner');
-                const adminAdsList = document.getElementById('admin-ads-list');
-                
-                adsBarInner.innerHTML = '';
-                if(adminAdsList) adminAdsList.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    adsBarInner.innerHTML = `<p class="text-gray-500 text-sm">Advertisements will be shown here.</p>`;
-                    if(adminAdsList) adminAdsList.innerHTML = `<p class="text-gray-500 text-center col-span-full">No ads uploaded yet.</p>`;
-                    return;
-                }
-                
                 const ads = [];
-                snapshot.forEach(doc => ads.push({ id: doc.id, ...doc.data() }));
-                ads.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-                ads.forEach(ad => {
-                    const mediaHtml = ad.type === 'video'
-                        ? `<video src="${ad.url}" class="w-full h-full object-cover" controls muted loop playsinline></video>`
-                        : `<img src="${ad.url}" alt="${ad.caption || 'Advertisement'}" class="w-full h-full object-cover">`;
-                    
-                    adsBarInner.innerHTML += `<div class="relative group flex-shrink-0 w-28 h-36 bg-gray-200 rounded-md shadow-md overflow-hidden">${mediaHtml}
-                        ${ad.caption ? `<div class="absolute bottom-0 left-0 w-full bg-black/50 text-white text-xs p-1 text-center truncate">${ad.caption}</div>` : ''}
-                    </div>`;
-                    
-                    if(adminAdsList){
-                        const canDelete = (userRole === 'admin') || (userRole === 'subadmin' && ad.uploaderId === currentUser.uid);
-                        const deleteBtnHtml = canDelete ? `<button onclick="window.deleteAd('${ad.id}', '${ad.url}')" class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 z-10"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '';
-                        adminAdsList.innerHTML += `
-                            <div class="relative w-full h-48 bg-gray-200 rounded-lg shadow-sm overflow-hidden group">
-                                ${mediaHtml}
-                                ${ad.caption ? `<div class="absolute bottom-0 left-0 w-full bg-black/50 text-white text-sm p-1 text-center truncate">${ad.caption}</div>` : ''}
-                                ${deleteBtnHtml}
-                            </div>
-                        `;
-                    }
+                snapshot.forEach(doc => {
+                    ads.push({ id: doc.id, ...doc.data() });
                 });
-                lucide.createIcons();
+                renderAds(ads);
+            }, (error) => {
+                console.error("Error listening to ads:", error);
             });
         }
-
-        async function deleteAd(id, url) {
-             if (window.confirm('Delete this ad permanently?')) {
-                const docRef = doc(db, `artifacts/${appId}/public/data/ads`, id);
-                const storageRef = ref(storage, url);
+        
+        function renderAds(ads) {
+            // Render on Admin Dashboard
+            const adminListEl = document.getElementById('admin-ads-list');
+            
+            // Render on Student/Public Footer
+            const footerListEl = document.getElementById('ads-bar-inner');
+            
+            let adminHtml = '';
+            let footerHtml = '';
+            
+            if (ads.length === 0) {
+                adminListEl.innerHTML = `<p class="md:col-span-3 text-center text-gray-500">No ads uploaded yet.</p>`;
+                footerListEl.innerHTML = `<p class="text-sm text-gray-400">Sponsored Ads</p>`;
+                return;
+            }
+            
+            ads.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)).forEach(ad => {
+                const mediaElement = ad.fileType === 'video' ? 
+                    `<video src="${ad.fileUrl}" controls class="w-full h-full object-cover rounded-t-lg" style="max-height: 200px;"></video>` :
+                    `<img src="${ad.fileUrl}" alt="${ad.caption || 'Advertisement'}" onerror="this.onerror=null;this.src='https://placehold.co/400x500/FEE2E2/EF4444?text=Ad+Error';" class="w-full h-full object-cover rounded-t-lg" style="max-height: 200px;">`;
+                
+                // Admin Card
+                adminHtml += `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        ${mediaElement}
+                        <div class="p-4">
+                            <p class="text-sm font-semibold">${ad.caption || 'No Caption'}</p>
+                            <p class="text-xs text-gray-500 mt-1">Uploaded: ${ad.createdAt ? new Date(ad.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+                            <button onclick="window.deleteAd('${ad.id}', '${ad.storagePath}')" class="btn btn-danger btn-sm w-full mt-3">Delete</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Footer Display (Responsive: Max 200px height, 4:5 ratio)
+                const isVideo = ad.fileType === 'video';
+                footerHtml += `
+                    <div class="flex-shrink-0 w-32 h-40 rounded-lg overflow-hidden shadow-lg border border-gray-100">
+                        ${isVideo ? 
+                            `<video src="${ad.fileUrl}" preload="none" loop muted class="w-full h-full object-cover rounded-lg" onclick="this.paused ? this.play() : this.pause()"></video>` :
+                            `<img src="${ad.fileUrl}" alt="${ad.caption || 'Ad'}" onerror="this.onerror=null;this.src='https://placehold.co/128x160/FEE2E2/EF4444?text=Ad';" class="w-full h-full object-cover rounded-lg">`
+                        }
+                    </div>
+                `;
+            });
+            
+            adminListEl.innerHTML = adminHtml;
+            footerListEl.innerHTML = footerHtml;
+            lucide.createIcons();
+        }
+        
+        async function deleteAd(id, storagePath) {
+             if (confirm('Are you sure you want to delete this advertisement? This action cannot be undone.')) {
                 try {
-                    await deleteObject(storageRef);
+                    // 1. Delete from Storage
+                    const storageRef = ref(storage, storagePath);
+                    await deleteObject(storageRef).catch(error => {
+                        if (error.code !== 'storage/object-not-found') {
+                            throw error;
+                        }
+                    });
+                    
+                    // 2. Delete from Firestore
+                    const docRef = doc(db, `artifacts/${appId}/public/data/ads`, id);
                     await deleteDoc(docRef);
-                    showToast('Ad deleted successfully.');
+                    
+                    showToast('Advertisement deleted.', 'success');
                 } catch (error) {
-                    if (error.code === 'storage/object-not-found') {
-                        await deleteDoc(docRef);
-                        showToast('Ad record deleted.');
-                    } else {
-                        showToast('Failed to delete ad.', 'error');
-                        console.error("Error deleting ad: ", error);
-                    }
+                    console.error("Error deleting ad:", error);
+                    showToast('Failed to delete ad.', 'error');
                 }
             }
         }
         
+        // --- Admin: Sub-Admin Management ---
+        
+        document.getElementById('add-subadmin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('subadmin-email').value;
+            const password = document.getElementById('subadmin-password').value;
+            
+            if (userRole !== 'admin') {
+                showToast('Permission denied. Only the main Admin can add sub-admins.', 'error');
+                return;
+            }
+            
+            try {
+                const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
+                
+                // Check for existing email 
+                const q = query(subAdminsColRef, where("email", "==", email));
+                const existing = await getDocs(q);
+                if (!existing.empty) {
+                    showToast(`Sub-Admin with email ${email} already exists.`, 'error');
+                    return;
+                }
+                
+                await addDoc(subAdminsColRef, {
+                    email: email,
+                    password: password, 
+                    createdAt: serverTimestamp()
+                });
+                
+                showToast('Sub-Admin added successfully!', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error("Error adding sub-admin:", error);
+                showToast('Failed to add sub-admin.', 'error');
+            }
+        });
+        
+        function listenForSubAdmins() {
+            if (userRole !== 'admin') return;
+            const subAdminsColRef = collection(db, `artifacts/${appId}/public/data/subAdmins`);
+            unsubscribeSubAdmins = onSnapshot(subAdminsColRef, (snapshot) => {
+                const subAdmins = [];
+                snapshot.forEach(doc => {
+                    subAdmins.push({ id: doc.id, ...doc.data() });
+                });
+                renderSubAdminsTable(subAdmins);
+            }, (error) => {
+                console.error("Error listening to sub-admins:", error);
+            });
+        }
+        
+        function renderSubAdminsTable(subAdmins) {
+            const tableEl = document.getElementById('subadmin-list');
+            
+            if (subAdmins.length === 0) {
+                tableEl.innerHTML = `<p class="p-6 text-center text-gray-500">No sub-admins configured.</p>`;
+                return;
+            }
+            
+            let html = `
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID (Internal)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+            `;
+            
+            subAdmins.forEach(admin => {
+                html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${admin.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${admin.id.substring(0, 10)}...</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="window.deleteSubAdmin('${admin.id}', '${admin.email}')" class="text-red-600 hover:text-red-900" title="Remove Sub-Admin">
+                                <i data-lucide="user-x" class="w-5 h-5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `</tbody></table></div>`;
+            tableEl.innerHTML = html;
+            lucide.createIcons();
+        }
+        
+        async function deleteSubAdmin(id, email) {
+            if (userRole !== 'admin') {
+                showToast('Permission denied.', 'error');
+                return;
+            }
+            if (confirm(`Are you sure you want to remove Sub-Admin: ${email}?`)) {
+                try {
+                     const docRef = doc(db, `artifacts/${appId}/public/data/subAdmins`, id);
+                     await deleteDoc(docRef);
+                     showToast('Sub-Admin removed.', 'success');
+                } catch (error) {
+                     console.error("Error deleting sub-admin:", error);
+                     showToast('Failed to remove sub-admin.', 'error');
+                }
+            }
+        }
 
-        // --- Global Functions for inline onclick ---
+
+        // --- Final Execution ---
+        
+        window.onload = () => {
+             initializeAppAndAuth();
+             // Initial icon rendering
+             lucide.createIcons();
+        };
+
+        // Export functions to window scope for HTML onclick attributes
+        window.closeModal = closeModal;
         window.editSubject = editSubject;
         window.deleteSubject = deleteSubject;
-        window.closeModal = closeModal;
+        window.switchTab = switchTab;
+        window.switchAdminTab = switchAdminTab;
+        window.updateEnquiryStatus = updateEnquiryStatus;
         window.deleteEnquiry = deleteEnquiry;
-        window.deleteSubAdmin = deleteSubAdmin;
         window.deleteAd = deleteAd;
-        window.markAttendance = markAttendance;
+        window.deleteSubAdmin = deleteSubAdmin;
 
-        // --- App Start ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeAppAndAuth();
-            generateTimetableGrid();
-            lucide.createIcons();
-            
-            const defaultTab = document.querySelector('.tab-btn[data-tab="attendance"]');
-            defaultTab.style.color = 'var(--brand-blue)';
-            defaultTab.style.borderColor = 'var(--brand-blue)';
-        });
     </script>
 </body>
 </html>
-
