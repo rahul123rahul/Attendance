@@ -7,58 +7,70 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { 
-            --primary-bg: #f7fafc;
-            --primary-text: #1a202c;
-            --brand-blue: #2b6cb0;
-            --brand-blue-dark: #2c5282;
-            --card-bg: #ffffff;
-            --border-color: #e2e8f0;
-            --danger: #e53e3e;
-            --success: #38a169;
-            --warning: #dd6b20;
+            --primary-bg: #f3f4f6;
+            --primary-text: #111827;
+            --brand-blue: #4f46e5; /* Indigo 600 */
+            --brand-blue-dark: #4338ca; /* Indigo 700 */
+            --brand-light: #e0e7ff;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --border-color: #e5e7eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         body {
-            background-color: var(--primary-bg);
+            background: linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%);
             color: var(--primary-text);
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
             padding: 1.5rem 1rem;
         }
         .auth-card {
             max-width: 400px;
-            margin: 4rem auto;
+            margin: 5vh auto;
             background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.5);
         }
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.625rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             border: 1px solid transparent;
+            font-size: 0.95rem;
         }
         .btn-primary {
             background-color: var(--brand-blue);
             color: white;
             border-color: var(--brand-blue);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
         }
         .btn-primary:hover {
             background-color: var(--brand-blue-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.4);
         }
         .btn-danger {
             background-color: var(--danger);
             color: white;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
         }
         .btn-danger:hover {
             background-color: #c53030;
@@ -69,20 +81,21 @@
             border-color: var(--brand-blue);
         }
         .btn-outline:hover {
-            background-color: #ebf8ff;
+            background-color: var(--brand-light);
         }
         .form-input {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.8rem 1rem;
             border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            background-color: #f7fafc;
-            transition: border-color 0.2s;
+            border-radius: 0.625rem;
+            background-color: #fff;
+            transition: all 0.2s;
+            font-size: 0.95rem;
         }
         .form-input:focus {
             outline: none;
             border-color: var(--brand-blue);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
         }
         /* Custom Modal */
         .modal-backdrop {
@@ -105,10 +118,11 @@
             visibility: visible;
         }
         .modal-content {
-            background-color: white;
+            background-color: var(--card-bg);
+            backdrop-filter: blur(12px);
             padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            border-radius: 1rem;
+            box-shadow: var(--shadow-lg);
             width: 90%;
             max-width: 500px;
             transform: translateY(-20px);
@@ -125,7 +139,7 @@
             border-radius: 50%;
             width: 40px;
             height: 40px;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -143,6 +157,7 @@
             height: 100%;
             border-radius: 9999px;
             transition: width 0.5s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         /* Timetable Grid Styling */
@@ -176,6 +191,25 @@
             color: var(--brand-blue) !important;
             border-color: var(--brand-blue) !important;
         }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* Utility Enhancements */
+        .glass-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -186,54 +220,84 @@
     <div id="app">
 
         <!-- Loading Screen -->
-        <div id="loading-screen" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-[100]">
+        <div id="loading-screen" class="fixed inset-0 bg-[#f3f4f6] flex flex-col items-center justify-center z-[100] transition-opacity duration-500">
             <div class="loader"></div>
-            <p class="mt-4 text-lg font-medium text-gray-600">Loading Attendance System...</p>
+            <p class="mt-4 text-lg font-medium text-gray-600 animate-pulse">Loading Attendance System...</p>
         </div>
 
         <!-- Authentication Page -->
-        <div id="auth-page" class="hidden">
-            <div class="auth-card">
+        <div id="auth-page" class="hidden min-h-screen flex items-center justify-center p-4">
+            <div class="auth-card animate-slide-up w-full">
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-gray-800">Attendance Tracker</h1>
-                    <p class="text-gray-500 mt-2">Sign in or create an account to continue</p>
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+                        <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Welcome Back</h1>
+                    <p class="text-gray-500 mt-2 text-sm">Attendance Tracking System</p>
                 </div>
                 
                 <form id="auth-form">
                     <div class="mb-4">
                         <label for="auth-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" id="auth-email" class="form-input" placeholder="Enter your email" required>
+                        <div class="relative">
+                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <i data-lucide="mail" class="w-4 h-4"></i>
+                            </div>
+                            <input type="email" id="auth-email" class="form-input pl-10" placeholder="student@college.edu" required>
+                        </div>
                     </div>
-                    <div class="mb-6">
-                        <label for="auth-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" id="auth-password" class="form-input" placeholder="Enter your password" required>
+                    <div class="mb-2">
+                         <div class="flex justify-between items-center mb-1">
+                            <label for="auth-password" class="block text-sm font-medium text-gray-700">Password</label>
+                        </div>
+                         <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </div>
+                            <input type="password" id="auth-password" class="form-input pl-10" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mb-6">
+                         <button type="button" onclick="openModal('forgot-password-modal')" class="text-xs font-medium text-brand-blue hover:text-indigo-500">Forgot Password?</button>
                     </div>
                     
                     <div id="auth-error" class="text-red-500 text-sm mb-4 text-center hidden"></div>
 
-                    <div class="flex items-center gap-4">
-                        <button type="button" id="login-btn" class="btn btn-primary w-full">Login</button>
+                    <div class="flex flex-col gap-3">
+                        <button type="submit" id="login-btn" class="btn btn-primary w-full shadow-lg shadow-indigo-500/30">Sign In</button>
                         <button type="button" id="signup-btn" class="btn btn-outline w-full">Sign Up</button>
                     </div>
+
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-gray-300"></span></div>
+                        <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">Or continue with</span></div>
+                    </div>
+
+                    <button type="button" id="google-login-btn" class="btn w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 relative flex items-center justify-center gap-2 shadow-sm transition-all">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                        <span>Google</span>
+                    </button>
                 </form>
 
-                 <div class="text-center mt-6">
-                    <button id="admin-login-prompt" class="text-sm text-gray-600 hover:text-brand-blue bg-transparent border-none p-0 cursor-pointer focus:outline-none focus:underline">Login as Admin / Sub-Admin</button>
+                 <div class="text-center mt-8 pt-6 border-t border-gray-100">
+                    <p class="text-xs text-gray-400 mb-2">Authorized Personnel Only</p>
+                    <button id="admin-login-prompt" class="text-sm font-medium text-gray-600 hover:text-brand-blue bg-transparent border-none p-0 cursor-pointer transition-colors">Login as Admin</button>
                 </div>
             </div>
         </div>
         
         <!-- Main Content Area (Dashboards) -->
-        <main id="main-content" class="container hidden">
+        <main id="main-content" class="container hidden animate-fade-in">
             <!-- App Header -->
-            <header class="flex items-center justify-between pb-4 border-b border-gray-200 mb-8">
+            <header class="flex items-center justify-between pb-6 mb-8">
                  <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Welcome, <span id="user-display-name">User</span>!</h1>
-                    <p class="text-gray-500">Your User ID: <code id="user-id-display" class="bg-gray-100 p-1 rounded"></code></p>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Dashboard</h1>
+                    <p class="text-gray-500 mt-1 flex items-center"><span id="user-display-name" class="font-medium text-gray-700 mr-2">User</span> <span class="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100" id="user-role-badge">Student</span></p>
                  </div>
-                <button id="logout-btn" class="btn btn-danger">
+                <button id="logout-btn" class="btn btn-danger shadow-red-500/20">
                     <i data-lucide="log-out" class="w-5 h-5 mr-2"></i>
-                    <span>Logout</span>
+                    <span class="hidden md:inline">Logout</span>
                 </button>
             </header>
 
@@ -255,20 +319,20 @@
                 </div>
 
                 <!-- Attendance Tab Content -->
-                <div id="attendance-tab">
+                <div id="attendance-tab" class="animate-fade-in">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div class="glass-card p-6 border-l-4 border-indigo-500">
                             <h3 class="font-semibold text-gray-500">Overall Attendance</h3>
                             <p id="overall-percentage" class="text-4xl font-bold text-brand-blue mt-2">0%</p>
                             <p id="overall-ratio" class="text-gray-500">0 / 0 classes</p>
                         </div>
-                         <div class="bg-white p-6 rounded-lg shadow-sm">
+                         <div class="glass-card p-6 border-l-4 border-emerald-500">
                             <h3 class="font-semibold text-gray-500">Attendance Status</h3>
                             <p id="overall-status" class="text-2xl font-bold mt-2 text-gray-500">Not enough data</p>
                             <p id="bunk-info" class="text-gray-500 mt-1">Add subjects to see details.</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center">
-                           <button id="open-mark-attendance-modal-btn" class="btn btn-primary w-full mb-3">
+                        <div class="glass-card p-6 flex flex-col justify-center items-center">
+                           <button id="open-mark-attendance-modal-btn" class="btn btn-primary w-full mb-3 shadow-indigo-500/20">
                                 <i data-lucide="check-check" class="w-5 h-5 mr-2"></i> Mark Today's Attendance
                             </button>
                             <button id="open-add-subject-modal-btn" class="btn btn-outline w-full">
@@ -284,8 +348,8 @@
                 </div>
 
                 <!-- Timetable Tab Content -->
-                <div id="timetable-tab" class="hidden">
-                     <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div id="timetable-tab" class="hidden animate-fade-in">
+                     <div class="glass-card p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-bold text-gray-800">Weekly Timetable</h2>
                             <button id="save-timetable-btn" class="btn btn-primary">
@@ -302,8 +366,8 @@
                 </div>
 
                 <!-- Enquiry Tab Content -->
-                <div id="enquiry-tab" class="hidden">
-                    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-sm">
+                <div id="enquiry-tab" class="hidden animate-fade-in">
+                    <div class="max-w-xl mx-auto glass-card p-8">
                         <h2 class="text-xl font-bold text-gray-800 mb-4">Submit an Enquiry or Suggestion</h2>
                         <form id="enquiry-form">
                             <div class="mb-4">
@@ -498,6 +562,24 @@
         </div>
     </div>
     
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-2">Reset Password</h2>
+            <p class="text-gray-500 text-sm mb-4">Enter your email address and we'll send you a link to reset your password.</p>
+            <form id="forgot-password-form">
+                <div class="mb-4">
+                    <label for="reset-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="reset-email" class="form-input" required>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('forgot-password-modal')" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Reset Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <!-- Custom Toast Notification -->
     <div id="toast" class="fixed top-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg opacity-0 transform translate-y-2 transition-all duration-300 z-[101]">
         <p id="toast-message"></p>
@@ -512,9 +594,12 @@
             onAuthStateChanged,
             createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
+            sendPasswordResetEmail,
             signOut,
             signInAnonymously,
-            signInWithCustomToken
+            signInWithCustomToken,
+            GoogleAuthProvider,
+            signInWithPopup
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import {
             getFirestore,
@@ -612,6 +697,7 @@
         // --- Initialization ---
         function initializeAppAndAuth() {
             try {
+                // Initialize
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -620,12 +706,25 @@
             } catch (error)
             {
                 console.error("Firebase initialization failed:", error);
-                loadingScreen.innerHTML = `<p class="text-red-500">Error: Could not connect to the backend.</p>`;
+                loadingScreen.innerHTML = `
+                    <div class="text-center p-6 bg-white rounded-lg shadow-lg">
+                        <p class="text-red-500 font-bold mb-2">Connection Error</p>
+                        <p class="text-gray-600 text-sm">Could not connect to the backend. Please check your internet.</p>
+                        <button onclick="window.location.reload()" class="btn btn-primary mt-4">Retry</button>
+                    </div>`;
             }
         }
         
         // --- Auth Listener ---
         function setupAuthListener() {
+            // Safety Timeout for loading screen
+            setTimeout(() => {
+                if (!loadingScreen.classList.contains('hidden') && !currentUser) {
+                    console.warn("Auth listener timeout - forcing auth page");
+                    showPage('auth');
+                }
+            }, 8000);
+
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUser = user;
@@ -669,8 +768,8 @@
                         createdAt: serverTimestamp()
                     });
                 }
-                setupDashboard('student');
             }
+            setupDashboard(userRole);
         }
 
         function showPage(page) {
@@ -685,7 +784,8 @@
                 mainContent.classList.remove('hidden');
                 document.getElementById('ads-bar').classList.remove('hidden');
             }
-            lucide.createIcons();
+            // Ensure icons are rendered after DOM update
+            setTimeout(() => lucide.createIcons(), 100);
         }
 
         function setupDashboard(role) {
@@ -729,7 +829,7 @@
                     createdAt: serverTimestamp()
                 });
                 
-                showToast("Signup successful! Welcome.", "success");
+                showToast("Account created successfully!", "success");
             } catch (error) {
                 if (error.code === 'auth/email-already-in-use') {
                     showAuthError("This email is already registered.");
@@ -752,6 +852,49 @@
                 console.error("Login error:", error);
             }
         }
+
+        async function handleGoogleLogin() {
+            const provider = new GoogleAuthProvider();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                
+                // Verify if user exists in database, if not create profile
+                const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}`);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (!userDoc.exists()) {
+                    await setDoc(userDocRef, {
+                        email: user.email,
+                        role: 'student',
+                        createdAt: serverTimestamp()
+                    });
+                }
+                
+                showToast("Google Authentication Successful!", "success");
+            } catch (error) {
+                console.error("Google Sign-In Error:", error);
+                
+                // Handle specific error codes for better feedback
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showAuthError("Sign-in process was cancelled.");
+                } else {
+                    // Display the actual error message (e.g., Domain not authorized)
+                    showAuthError(error.message || "Google Sign-In failed. Please try again.");
+                }
+            }
+        }
+
+        async function handleForgotPassword(email) {
+             try {
+                await sendPasswordResetEmail(auth, email);
+                showToast(`Reset link sent to ${email}`, 'success');
+                closeModal('forgot-password-modal');
+            } catch (error) {
+                console.error("Reset password error:", error);
+                showToast("Failed to send reset link. Check email.", 'error');
+            }
+        }
         
         async function handleAdminLogin(email, password) {
             hideAuthError('admin-login');
@@ -759,7 +902,7 @@
             if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 userRole = 'admin';
                 document.getElementById('user-display-name').textContent = 'Main Admin';
-                document.getElementById('user-id-display').textContent = 'admin';
+                document.getElementById('user-role-badge').textContent = 'Super Admin';
                 setupDashboard('admin');
                 closeModal('admin-login-modal');
                 return;
@@ -780,8 +923,8 @@
 
             if (subAdminData.password === password) {
                 userRole = 'subadmin';
-                document.getElementById('user-display-name').textContent = `Sub-Admin (${email})`;
-                document.getElementById('user-id-display').textContent = subAdminDoc.id.substring(0,10) + '...';
+                document.getElementById('user-display-name').textContent = email.split('@')[0];
+                document.getElementById('user-role-badge').textContent = 'Sub-Admin';
                 currentUser = { uid: subAdminDoc.id, email: email }; // Simulate a user object for dashboard context
                 setupDashboard('subadmin');
                 closeModal('admin-login-modal');
@@ -815,13 +958,16 @@
             handleSignup(email, password);
         });
 
-        document.getElementById('login-btn').addEventListener('click', () => {
+        document.getElementById('auth-form').addEventListener('submit', (e) => {
+            e.preventDefault();
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             if (!email || !password) return;
             hideAuthError();
             handleLogin(email, password);
         });
+
+        document.getElementById('google-login-btn').addEventListener('click', handleGoogleLogin);
         
         document.getElementById('admin-login-prompt').addEventListener('click', (e) => {
             e.preventDefault();
@@ -833,6 +979,12 @@
             const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
             handleAdminLogin(email, password);
+        });
+
+        document.getElementById('forgot-password-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value;
+            if(email) handleForgotPassword(email);
         });
 
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
@@ -930,7 +1082,7 @@
                     if(percentage < 65) statusColor = 'bg-red-500';
                     
                     subjectsHtml += `
-                        <div class="bg-white p-5 rounded-lg shadow-sm">
+                        <div class="glass-card p-5 border-t-4 ${percentage < 75 ? 'border-red-500' : 'border-green-500'}">
                             <div class="flex justify-between items-start">
                                 <h3 class="text-lg font-bold text-gray-800">${subject.name}</h3>
                                 <div class="flex gap-2">
