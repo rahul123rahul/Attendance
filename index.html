@@ -726,8 +726,15 @@
 
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    currentUser = user;
-                    await fetchUserRoleAndSetupDashboard(user.uid);
+                    try {
+                        currentUser = user;
+                        await fetchUserRoleAndSetupDashboard(user.uid);
+                    } catch (error) {
+                        console.error("Dashboard setup failed:", error);
+                        showToast("Failed to load user data. This might be a permissions issue.", "error");
+                        // Log out the user to prevent being in a broken state
+                        await handleLogout();
+                    }
                 } else {
                     currentUser = null;
                     showPage('auth');
@@ -743,32 +750,37 @@
         }
         
         async function fetchUserRoleAndSetupDashboard(uid) {
-            const userDocRef = doc(db, `users/${uid}`);
-            const userDoc = await getDoc(userDocRef);
-            
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                userRole = userData.role || 'student';
-                document.getElementById('user-display-name').textContent = userData.email || 'User';
-                document.getElementById('user-id-display').textContent = uid.substring(0, 10) + '...';
-                setupDashboard(userRole);
-            } else {
-                // Initial creation for a brand new user
-                userRole = 'student';
-                const displayEmail = currentUser?.email || 'User';
-                document.getElementById('user-display-name').textContent = displayEmail;
-                document.getElementById('user-id-display').textContent = uid ? uid.substring(0,10) + '...' : 'anonymous';
+            try {
+                const userDocRef = doc(db, `users/${uid}`);
+                const userDoc = await getDoc(userDocRef);
                 
-                // Create minimal user profile
-                 if (currentUser.email) {
-                    await setDoc(userDocRef, {
-                        email: currentUser.email,
-                        role: 'student',
-                        createdAt: serverTimestamp()
-                    });
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    userRole = userData.role || 'student';
+                    document.getElementById('user-display-name').textContent = userData.email || 'User';
+                    // document.getElementById('user-id-display').textContent = uid.substring(0, 10) + '...'; // This element does not exist in the HTML
+                } else {
+                    // Initial creation for a brand new user
+                    userRole = 'student';
+                    const displayEmail = currentUser?.email || 'User';
+                    document.getElementById('user-display-name').textContent = displayEmail;
+                    // document.getElementById('user-id-display').textContent = uid ? uid.substring(0,10) + '...' : 'anonymous'; // This element does not exist in the HTML
+                    
+                    // Create minimal user profile
+                     if (currentUser.email) {
+                        await setDoc(userDocRef, {
+                            email: currentUser.email,
+                            role: 'student',
+                            createdAt: serverTimestamp()
+                        });
+                    }
                 }
+                setupDashboard(userRole);
+            } catch (error) {
+                console.error("Error fetching user role:", error);
+                // Re-throw the error to be caught by the onAuthStateChanged handler
+                throw new Error("Could not fetch user profile. This is likely a permissions issue in your Firestore rules.");
             }
-            setupDashboard(userRole);
         }
 
         function showPage(page) {
@@ -897,38 +909,49 @@
         
         async function handleAdminLogin(email, password) {
             hideAuthError('admin-login');
-            // Check Main Admin (Hardcoded)
-            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-                userRole = 'admin';
-                document.getElementById('user-display-name').textContent = 'Main Admin';
-                document.getElementById('user-role-badge').textContent = 'Super Admin';
-                setupDashboard('admin');
-                closeModal('admin-login-modal');
-                return;
-            }
+            try {
+                // Ensure we have an authenticated session (anonymous is fine) to query the database
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
 
-            // Check Sub-Admin (Firestore)
-            const subAdminsRef = collection(db, `subAdmins`);
-            const q = query(subAdminsRef, where("email", "==", email));
-            const querySnapshot = await getDocs(q);
+                // Check Main Admin (Hardcoded)
+                if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+                    userRole = 'admin';
+                    document.getElementById('user-display-name').textContent = 'Main Admin';
+                    document.getElementById('user-role-badge').textContent = 'Super Admin';
+                    setupDashboard('admin');
+                    closeModal('admin-login-modal');
+                    return;
+                }
 
-            if (querySnapshot.empty) {
-                showAuthError("No admin account found for this email.", 'admin-login');
-                return;
-            }
-            
-            const subAdminDoc = querySnapshot.docs[0];
-            const subAdminData = subAdminDoc.data();
+                // Check Sub-Admin (Firestore)
+                const subAdminsRef = collection(db, `subAdmins`);
+                const q = query(subAdminsRef, where("email", "==", email));
+                const querySnapshot = await getDocs(q);
 
-            if (subAdminData.password === password) {
-                userRole = 'subadmin';
-                document.getElementById('user-display-name').textContent = email.split('@')[0];
-                document.getElementById('user-role-badge').textContent = 'Sub-Admin';
-                currentUser = { uid: subAdminDoc.id, email: email }; // Simulate a user object for dashboard context
-                setupDashboard('subadmin');
-                closeModal('admin-login-modal');
-            } else {
-                 showAuthError("Incorrect password.", 'admin-login');
+                if (querySnapshot.empty) {
+                    showAuthError("No admin account found for this email.", 'admin-login');
+                    return;
+                }
+                
+                const subAdminDoc = querySnapshot.docs[0];
+                const subAdminData = subAdminDoc.data();
+
+                if (subAdminData.password === password) {
+                    userRole = 'subadmin';
+                    document.getElementById('user-display-name').textContent = email.split('@')[0];
+                    document.getElementById('user-role-badge').textContent = 'Sub-Admin';
+                    currentUser = { uid: subAdminDoc.id, email: email }; // Simulate a user object for dashboard context
+                    setupDashboard('subadmin');
+                    closeModal('admin-login-modal');
+                } else {
+                     showAuthError("Incorrect password.", 'admin-login');
+                }
+            } catch (error) {
+                console.error("Admin login error:", error);
+                const message = error.code === 'permission-denied' ? "Permission denied. Check Firestore rules." : "An error occurred during login.";
+                showAuthError(message, 'admin-login');
             }
         }
 
